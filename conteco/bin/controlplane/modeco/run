@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+if [[ "$1" == "for-each-node" ]] ; then
+(
+	shift
+    . executionplane-invoke "$0 $@"
+	command=$1
+	shift
+	rootPath="${CONTECO_PWD}/${BASH_ARGV[0]}/modeco"
+	if [[ $# -gt 2 ]] ; then
+		stackName="$2"
+	else
+		stackName="all"
+	fi
+	. $rootPath/settings.global
+	. $rootPath/settings
+	case $command in
+		boot)
+			bootStacks="${CONTECO_MODULE_BOOTSTACKS}"
+			IFS=',' read -r -a stacks <<< "$bootStacks"
+			for stack in ${stacks[@]};
+			do
+				if [[ "all,${CONTECO_MODULE_BOOTSTACKS}"  == *"$stackName"* ]] ; then
+					deploy $stack up "${BASH_ARGV[0]}"
+				fi
+				done;
+			;;
+		pause)
+			executionplane-error "Method not implemented: ${CONTECO_NAME} $(basename $0)."
+			;;
+		resume)
+			executionplane-error "Method not implemented: ${CONTECO_NAME} $(basename $0)."
+			;;
+		shutdown)
+			bootStacks="${CONTECO_MODULE_BOOTSTACKS}"
+			IFS=',' read -r -a stacks <<< "$bootStacks"
+			for stack in ${stacks[@]};
+			do
+				if [[ "all,${CONTECO_MODULE_BOOTSTACKS}"  == *"$stackName"* ]] ; then
+					deploy $stack down "${BASH_ARGV[0]}"
+				fi
+				done;
+			;;
+		start)
+			runStacks="${CONTECO_MODULE_RUNSTACKS}"
+			IFS=',' read -r -a stacks <<< "$runStacks"
+			for stack in ${stacks[@]};
+			do
+				if [[ "all,${CONTECO_MODULE_RUNSTACKS}"  == *"$stackName"* ]] ; then
+					deploy $stack up "${BASH_ARGV[0]}"
+				fi
+				done;
+			;;
+		stop)
+			runStacks="${CONTECO_MODULE_RUNSTACKS}"
+			IFS=',' read -r -a stacks <<< "$runStacks"
+			for stack in ${stacks[@]};
+			do
+				if [[ "all,${CONTECO_MODULE_RUNSTACKS}"  == *"$stackName"* ]] ; then
+					deploy $stack down "${BASH_ARGV[0]}"
+				fi
+				done;
+			;;
+		*)
+			executionplane-error "Method not implemented: ${CONTECO_NAME} $(basename $0)."
+			;;
+	esac
+    executionplane-complete
+)
+else
+    export PATH="$CONTECO_EXECUTIONPLANE_APIINTERNALPATH_MODECO"
+	for-each $(basename $0) $@
+fi

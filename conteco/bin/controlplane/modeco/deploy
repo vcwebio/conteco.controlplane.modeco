@@ -3,8 +3,48 @@ if [[ "$1" == "for-each-node" ]] ; then
 (
 	shift
     . executionplane-invoke "$0 $@"
-	imageName="${CONTECO_REALM}/${CONTECO_ECOSYSTEM}.${CONTECO_TYPE}.${CONTECO_NAME}"
-	executionplane-error "Method not implemented: ${CONTECO_NAME} $(basename $0)."
+	if [[ $# -gt 2 ]] ; then
+		item=$1
+		command=$2
+		shift
+		shift
+	elif [[ $# -gt 1 ]] ; then
+		item=$1
+		command="up"
+		shift
+	else
+		item="module"
+		command="up"
+	fi
+	if [[ $# -gt 1 ]] ; then
+		rootPath="${CONTECO_PWD}/${BASH_ARGV[0]}/modeco"
+	else
+		rootPath="${CONTECO_PWD}/$1/modeco"
+	fi
+	. $rootPath/settings.global
+	. $rootPath/settings
+	if [[ "$item" == "module" ]] ; then
+		# prepare the swarm node for stack deploy
+		test="test"
+	else
+		composefile="$rootPath/stacks/$item.docker-compose.yml"
+		stackName="${CONTECO_TYPE}_${CONTECO_NAME}_$(echo $item | tr '.-' '_' )"
+		case $command in
+			down)
+				executionplane docker stack remove $stackName
+				;;
+			downup)
+				executionplane docker stack remove $stackName
+				deploy-up $stackName $composefile
+				;;
+			up)
+				deploy-up $stackName $composefile
+				;;
+			*)
+				executionplane-error "Method not implemented: ${CONTECO_NAME} $command."
+				;;
+		esac
+	fi
 	executionplane-complete
 )
 else
