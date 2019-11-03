@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+(
+	rootPath=$1
+	. $rootPath/modeco/settings.global
+	for f in $rootPath/modeco/stacks/*.docker-compose.yml.template;
+	do
+		filename=$(basename $f)
+		filename=${filename//.template/}
+		cat $f | envsubst "$CONTECO_DC_GLOBAL" > $rootPath/modeco/stacks/${filename}
+		done;
+)

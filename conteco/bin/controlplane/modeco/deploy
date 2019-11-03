@@ -28,6 +28,10 @@ if [[ "$1" == "for-each-node" ]] ; then
 		test="test"
 	else
 		composefile="$rootPath/stacks/$item.docker-compose.yml"
+		position=$(echo $item | cut -d'.' -f 1)
+		stackNames="${MODECO_DC_GLOBAL_STACKNAMES}"
+		IFS=',' read -r -a stacks <<< "$stackNames"
+		item=${stacks[position]}
 		stackName="${CONTECO_TYPE}_${CONTECO_NAME}_$(echo $item | tr '.-' '_' )"
 		case $command in
 			down)

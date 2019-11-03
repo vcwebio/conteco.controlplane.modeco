@@ -9,18 +9,23 @@ if [[ "$1" == "for-each-node" ]] ; then
 		rootPath="${CONTECO_PWD}/$1"
 	fi
 	imageName="${CONTECO_REALM}/${CONTECO_ECOSYSTEM}.${CONTECO_TYPE}.${CONTECO_NAME}"
-	case $1 in
+	command=$1
+	shift
+	case $command in
 		build)
-			.base config $@
+			.base config $command $@
 			;;
 		increment)
-			.base config $@
+			.base config $command $@
+			;;
+		module)
+			config-module $rootPath
 			;;
 		remove-crs)
-			.base config $@
+			.base config $command $@
 			;;
 		set-version)
-			.base config $@
+			.base config $command $@
 			;;
 		*)
 			executionplane-error "Method not recognised: $1."
