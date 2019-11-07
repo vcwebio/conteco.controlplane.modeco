@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+rootPath=$1
+
+# remove module overlay network
+executionplane docker network rm ${CONTECO_TYPE}_overlay
+
+# remove volume volumes on all nodes
+

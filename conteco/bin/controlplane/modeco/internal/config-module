@@ -2,10 +2,13 @@
 (
 	rootPath=$1
 	. $rootPath/modeco/settings.global
-	for f in $rootPath/modeco/stacks/*.docker-compose.yml.template;
+	. $rootPath/modeco/settings
+	IFS=',' read -r -a stacks <<< "${CONTECO_DC_GLOBAL_STACKS}"
+	IFS=',' read -r -a stackNames <<< "${MODECO_DC_GLOBAL_STACKNAMES}"
+	for stackNumber in ${!stacks[@]};
 	do
-		filename=$(basename $f)
-		filename=${filename//.template/}
-		cat $f | envsubst "$CONTECO_DC_GLOBAL" > $rootPath/modeco/stacks/${filename}
+		source=$rootPath/modeco/stacks/${stackNumber}.${stacks[stackNumber]}.docker-compose.yml.template
+		destination=$rootPath/modeco/stacks/${stackNames[stackNumber]}.docker-compose.yml
+		cat $source | envsubst > $destination
 		done;
 )

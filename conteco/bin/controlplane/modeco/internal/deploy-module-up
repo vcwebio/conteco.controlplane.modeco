@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+(
+rootPath=$1
+. $rootPath/modeco/settings
+
+# create module overlay network
+executionplane docker network create -d overlay ${CONTECO_TYPE}_overlay
+
+# create initialised module volumes on all nodes
+IFS=',' read -r -a volumes <<< "${MODECO_DC_GLOBAL_VOLUMES}"
+for volume in ${volumes[@]};
+do
+	executionplane docker volume create $volume
+	done;
+
+)

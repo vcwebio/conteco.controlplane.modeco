@@ -21,17 +21,26 @@ if [[ "$1" == "for-each-node" ]] ; then
 	else
 		rootPath="${CONTECO_PWD}/$1/modeco"
 	fi
-	. $rootPath/settings.global
 	. $rootPath/settings
 	if [[ "$item" == "module" ]] ; then
 		# prepare the swarm node for stack deploy
-		test="test"
+		case $command in
+			down)
+				deploy-module-down $rootPath
+				;;
+			downup)
+				deploy-module-down $rootPath
+				deploy-module-up $rootPath
+				;;
+			up)
+				deploy-module-up $rootPath
+				;;
+			*)
+				executionplane-error "Method not implemented: ${CONTECO_NAME} $command."
+				;;
+		esac
 	else
 		composefile="$rootPath/stacks/$item.docker-compose.yml"
-		position=$(echo $item | cut -d'.' -f 1)
-		stackNames="${MODECO_DC_GLOBAL_STACKNAMES}"
-		IFS=',' read -r -a stacks <<< "$stackNames"
-		item=${stacks[position]}
 		stackName="${CONTECO_TYPE}_${CONTECO_NAME}_$(echo $item | tr '.-' '_' )"
 		case $command in
 			down)
