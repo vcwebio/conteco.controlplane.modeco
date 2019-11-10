@@ -10,7 +10,7 @@
 		volumeName=$(echo $volumeSettings | cut -d':' -f 1) 
 		volumeDir=$(echo $volumeSettings | cut -d':' -f 2) 
 		if [[ " all $volumeName "  == *"$volume"* ]] ; then
-			executionplane docker run -v $volumePrefix_$volumeName:$volumeDir -v ${CONTECO_PWD_VOLUME}/${CONTECO_REALM}/${CONTECO_ECOSYSTEM}.${CONTECO_TYPE}.${CONTECO_NAME}/modeco/volumes:/backup ${CONTECO_REALM}/${CONTECO_ECOSYSTEM}.${CONTECO_TYPE}.${CONTECO_NAME} --interactive rm /backup/${volumeName}.tar && tar cvf /backup/${volumeName}.tar ${volumeDir}
+			executionplane docker run -v ${volumePrefix}_${volumeName}:${volumeDir} -v ${CONTECO_PWD_VOLUME}/${CONTECO_REALM}/${CONTECO_ECOSYSTEM}.${CONTECO_TYPE}.${CONTECO_NAME}/modeco/volumes:/backup ${CONTECO_REALM}/${CONTECO_ECOSYSTEM}.${CONTECO_TYPE}.${CONTECO_NAME} --interactive tar cvf /backup/${volumeName}.tar ${volumeDir}
 		fi
 		done;
 )
