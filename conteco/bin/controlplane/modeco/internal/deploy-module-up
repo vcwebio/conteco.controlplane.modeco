@@ -1,16 +1,21 @@
 #!/usr/bin/env bash
-(
 rootPath=$1
-. $rootPath/modeco/settings
 
 # create module overlay network
 executionplane docker network create -d overlay ${CONTECO_TYPE}_overlay
 
 # create initialised module volumes on all nodes
+volumePrefix=$(echo "${CONTECO_TYPE}.${CONTECO_NAME}" | tr '.-' '_')
 IFS=',' read -r -a volumes <<< "${MODECO_DC_GLOBAL_VOLUMES}"
 for volume in ${volumes[@]};
 do
-	executionplane docker volume create $volume
+	executionplane docker volume create "${volumePrefix}_${volume}"
 	done;
 
-)
+IFS=',' read -r -a volumes <<< "${MODECO_DC_GLOBAL_VOLUMES_INITIALISED}"
+for volumeSettings in ${volumes[@]};
+do
+	volumeName=$(echo $volumeSettings | cut -d':' -f 1) 
+	volumeDir=$(echo $volumeSettings | cut -d':' -f 2) 
+	executionplane docker run -v ${volumePrefix}_${volumeName}:${volumeDir} -v ${CONTECO_PWD_VOLUME}/${CONTECO_REALM}/${CONTECO_ECOSYSTEM}.${CONTECO_TYPE}.${CONTECO_NAME}/modeco/volumes:/backup ${CONTECO_REALM}/${CONTECO_ECOSYSTEM}.${CONTECO_TYPE}.${CONTECO_NAME} --interactive tar -C / -xvf /backup/${volumeName}.tar
+	done;
