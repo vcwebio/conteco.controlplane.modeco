@@ -8,8 +8,9 @@ executionplane docker network rm ${CONTECO_TYPE}_overlay
 executionplane docker container prune --force
 
 # create initialised module volumes on all nodes
+volumePrefix=$(echo "${CONTECO_TYPE}.${CONTECO_NAME}" | tr '.-' '_')
 IFS=',' read -r -a volumes <<< "${MODECO_DC_GLOBAL_VOLUMES}"
 for volume in ${volumes[@]};
 do
-	executionplane docker volume rm --force $volume
+	executionplane docker volume rm --force ${volumePrefix}_${volume}
 	done;
