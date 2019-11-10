@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 (
-	volumeName=$1
+	volume=$1
 	rootPath=$2
 	. $rootPath/modeco/settings
+	volumePrefix=$(echo "${CONTECO_TYPE}.${CONTECO_NAME}" | tr '.-' '_')
 	IFS=',' read -r -a volumes <<< "${MODECO_DC_GLOBAL_VOLUMES_INITIALISED}"
 	for volumeSettings in ${volumes[@]};
 	do
 		volumeName=$(echo $volumeSettings | cut -d':' -f 1) 
 		volumeDir=$(echo $volumeSettings | cut -d':' -f 2) 
-		if [[ " all $volume "  == *"$volumeName"* ]] ; then
-			echo "docker run -v swarm_base_ss_processor_modeco_ss-processor_volume:/data -v /c/conteco/pwd/vcwebio/modeco.swarm.base/modeco/volumes:/backup vcwebio/conteco.image.base --interactive tar cvf /backup/swarm_base_ss_processor_modeco_ss-processor_volume.tar /data"
-			echo "docker run -v $volume"
+		if [[ " all $volumeName "  == *"$volume"* ]] ; then
+			executionplane docker run -v $volumePrefix_$volumeName:$volumeDir -v ${CONTECO_PWD_VOLUME}/${CONTECO_REALM}/${CONTECO_ECOSYSTEM}.${CONTECO_TYPE}.${CONTECO_NAME}/modeco/volumes:/backup ${CONTECO_REALM}/${CONTECO_ECOSYSTEM}.${CONTECO_TYPE}.${CONTECO_NAME} --interactive rm /backup/${volumeName}.tar && tar cvf /backup/${volumeName}.tar ${volumeDir}
 		fi
 		done;
 )
