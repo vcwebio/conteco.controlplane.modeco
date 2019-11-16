@@ -1,0 +1,28 @@
+#
+# run
+# The run API manages the full run lifecycle.
+# It implements six methods: boot, start, pause, resume, stop and shutdown
+#
+# run boot [bootstack]
+# Run boot start the service stacks identified as boot stack.
+# These stacks need to be running first before the module can be started.
+# It starts a specific stack if supplied, otherwise it starts all stacks.
+#
+# run start [runstack]
+# This method starts one specific or all run stacks.
+# These stacks make the module functionally active.
+#
+# run pause
+# This method pauses a specific or all run stack(s).
+# This method has not been implemented yet.
+#
+# run resume
+# This method resumes a specific or all run stack(s).
+# This method has not been implemented yet.
+#
+# run stop [runstack]
+# This method stops one specific or all run stacks.
+#
+# run shutdown [bootstack]
+# This method stops a specific or all boot stacks, shutting down the module.
+#
