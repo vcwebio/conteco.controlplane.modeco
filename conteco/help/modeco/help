@@ -1,6 +1,8 @@
 #
 # controlplane.modeco
-# The modeco controlplane manages the functional configuration and operation of structural container ecosystems.
-# modeco stands for module ecosystem.
-# Its API implements repo, console, build, release, deploy and run.
+# The modeco controlplane manages the functional configuration and operation of functional modules.
+# The name modeco stands for module ecosystem.
+#
+# The  API consists of repo, config, build, release, deploy and run.
+# The controlplane.modeco controlplane has specific implementations for config (partial), deploy and run.
 #
