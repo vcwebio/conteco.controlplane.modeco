@@ -2,10 +2,13 @@
 rootPath=$1
 
 # create module overlay network
-executionplane docker network create -d overlay ${CONTECO_TYPE}_overlay
+networks="${CONTECO_TYPE^^}_GLOBAL_NETWORKS"
+if [[ "${!networks}" == *"${CONTECO_TYPE}_overlay"* ]] ; then
+	executionplane docker network create -d overlay ${CONTECO_TYPE}_overlay
+fi
 
 # create initialised module volumes on all nodes
-volumePrefix=$(echo "${CONTECO_TYPE}.${CONTECO_NAME}" | tr '.-' '_')
+volumePrefix=$(echo "${CONTECO_TYPE}" | tr '.-' '_')
 IFS=',' read -r -a volumes <<< "${MODECO_DC_GLOBAL_VOLUMES}"
 for volume in ${volumes[@]};
 do
@@ -15,7 +18,7 @@ do
 IFS=',' read -r -a volumes <<< "${MODECO_DC_GLOBAL_VOLUMES_INITIALISED}"
 for volumeSettings in ${volumes[@]};
 do
-	volumeName=$(echo $volumeSettings | cut -d':' -f 1) 
-	volumeDir=$(echo $volumeSettings | cut -d':' -f 2) 
+	volumeName=$(echo $volumeSettings | cut -d':' -f 1)
+	volumeDir=$(echo $volumeSettings | cut -d':' -f 2)
 	executionplane docker run -v ${volumePrefix}_${volumeName}:${volumeDir} -v ${CONTECO_PWD_VOLUME}/${CONTECO_REALM}/${CONTECO_ECOSYSTEM}.${CONTECO_TYPE}.${CONTECO_NAME}/modeco/volumes:/backup ${CONTECO_REALM}/${CONTECO_ECOSYSTEM}.${CONTECO_TYPE}.${CONTECO_NAME} --interactive tar -C / -xvf /backup/${volumeName}.tar
 	done;

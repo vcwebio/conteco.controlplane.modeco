@@ -42,7 +42,7 @@ if [[ "$1" == "for-each-node" ]] ; then
 		esac
 	else
 		composefile="$rootPath/stacks/$item.docker-compose.yml"
-		stackName="${CONTECO_TYPE}_${CONTECO_NAME}_$(echo $item | tr '.-' '_' )"
+		stackName="${CONTECO_TYPE}_$(echo $item | tr '.-' '_' )"
 		case $command in
 			down)
 				executionplane docker stack remove $stackName
