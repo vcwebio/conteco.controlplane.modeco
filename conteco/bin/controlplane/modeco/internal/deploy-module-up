@@ -2,10 +2,7 @@
 rootPath=$1
 
 # create module overlay network
-networks="${CONTECO_TYPE^^}_GLOBAL_NETWORKS"
-if [[ "${!networks}" == *"${CONTECO_TYPE}_overlay"* ]] ; then
-	executionplane docker network create -d overlay ${CONTECO_TYPE}_overlay
-fi
+executionplane docker network create -d overlay ${CONTECO_TYPE}_overlay
 
 # create initialised module volumes on all nodes
 volumePrefix=$(echo "${CONTECO_TYPE}" | tr '.-' '_')

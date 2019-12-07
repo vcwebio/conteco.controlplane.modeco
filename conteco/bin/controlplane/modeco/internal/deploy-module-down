@@ -2,10 +2,7 @@
 rootPath=$1
 
 # remove module overlay network
-networks="${CONTECO_TYPE^^}_GLOBAL_NETWORKS"
-if [[ "${!networks}" == *"${CONTECO_TYPE}_overlay"* ]] ; then
-	executionplane docker network rm ${CONTECO_TYPE}_overlay
-fi
+executionplane docker network rm ${CONTECO_TYPE}_overlay
 
 # this should be restricted to module containers only, but how?
 executionplane docker container prune --force
