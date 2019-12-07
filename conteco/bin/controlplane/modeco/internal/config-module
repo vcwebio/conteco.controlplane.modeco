@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 (
 	rootPath=$1
-	. $rootPath/modeco/settings.base
+	. $rootPath/modeco/settings
 	if [[ "${MODECO_DC_GLOBAL_STACKNAMES}" == "" ]] ; then
 		executionplane-error "CANNOT CONFIGURATE MODULE: No stack names found."
 	else
@@ -16,9 +16,20 @@
 			destination=$rootPath/modeco/stacks/${stackNames[stackNumber]}.docker-compose.yml
 			cp $source $destination
 			sed -i -e "s/CONTECO_DC_${stackNumber}_/${STACKNAME_ENV}_/g" $destination
-			sed -i -e "s/CONTECO_DC_/${CONTECO_TYPE_ENV}_/g" $destination
+#			sed -i -e "s/CONTECO_DC_/${CONTECO_TYPE_ENV}_/g" $destination
 			sed -i -e "s/CONTECO_DC_${stackNumber}_/${STACKNAME_ENV}_/g" $rootPath/modeco/settings.module
 			done;
 		sed -i -e "s/CONTECO_DC_/${CONTECO_TYPE_ENV}_/g" $rootPath/modeco/settings.module
+
+		for stackName in ${stackNames[@]};
+		do
+			destination=$rootPath/modeco/stacks/${stackName}.docker-compose.yml
+			for stackNumber in ${!stacks[@]};
+			do
+				STACKNAME_ENV=$(echo "${stackNames[stackNumber]}" | tr - _)
+				sed -i -e "s/CONTECO_DC_${stackNumber}_/${STACKNAME_ENV}_/g" $destination
+			done;
+			sed -i -e "s/CONTECO_DC_/${CONTECO_TYPE_ENV}_/g" $destination
+		done;
 	fi
 )
