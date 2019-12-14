@@ -19,13 +19,21 @@ if [[ "$1" == "for-each-node" ]] ; then
 			for stack in ${stacks[@]};
 			do
 				if [[ " all $stack "  == *"$stackName"* ]] ; then
-					deploy $stack up "${BASH_ARGV[0]}"
+					deploy "for-each-node" $stack up "${BASH_ARGV[0]}"
 				fi
 				done;
 			;;
 		pause)
 			executionplane-error "Method not implemented: ${CONTECO_NAME} $(basename $0)."
 			;;
+			reboot)
+				run "for-each-node" shutdown $@
+				run "for-each-node" boot $@
+				;;
+			restart)
+				run "for-each-node" stop $@
+				run "for-each-node" start $@
+				;;
 		resume)
 			executionplane-error "Method not implemented: ${CONTECO_NAME} $(basename $0)."
 			;;
@@ -35,7 +43,7 @@ if [[ "$1" == "for-each-node" ]] ; then
 			for stack in ${stacks[@]};
 			do
 				if [[ " all $stack "  == *"$stackName"* ]] ; then
-					deploy $stack down "${BASH_ARGV[0]}"
+					deploy "for-each-node" $stack down "${BASH_ARGV[0]}"
 				fi
 				done;
 			;;
@@ -45,7 +53,7 @@ if [[ "$1" == "for-each-node" ]] ; then
 			for stack in ${stacks[@]};
 			do
 				if [[ " all $stack "  == *"$stackName"* ]] ; then
-					deploy $stack up "${BASH_ARGV[0]}"
+					deploy "for-each-node" $stack up "${BASH_ARGV[0]}"
 				fi
 				done;
 			;;
@@ -55,7 +63,7 @@ if [[ "$1" == "for-each-node" ]] ; then
 			for stack in ${stacks[@]};
 			do
 				if [[ " all $stack "  == *"$stackName"* ]] ; then
-					deploy $stack down "${BASH_ARGV[0]}"
+					deploy "for-each-node" $stack down "${BASH_ARGV[0]}"
 				fi
 				done;
 			;;
