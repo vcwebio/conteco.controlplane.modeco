@@ -2,11 +2,11 @@
 (
 	rootPath=$1
 	. $rootPath/modeco/settings
-	if [[ "${MODECO_DC_GLOBAL_STACKNAMES}" == "" ]] ; then
+	if [[ "${CONTECO_DC_GLOBAL_STACKNAMES}" == "" ]] ; then
 		executionplane-error "CANNOT CONFIGURE MODULE: No stack names found."
 	else
 		IFS=',' read -r -a stacks <<< "${CONTECO_DC_GLOBAL_STACKS}"
-		IFS=',' read -r -a stackNames <<< "${MODECO_DC_GLOBAL_STACKNAMES}"
+		IFS=',' read -r -a stackNames <<< "${CONTECO_DC_GLOBAL_STACKNAMES}"
 		CONTECO_TYPE_ENV=$(echo "${CONTECO_TYPE^^}" | tr - _)
 		cp $rootPath/modeco/settings.template $rootPath/modeco/settings.module
 		for stackNumber in ${!stacks[@]};

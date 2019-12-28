@@ -14,7 +14,7 @@ if [[ "$1" == "for-each-node" ]] ; then
 	fi
 	case $command in
 		boot)
-			bootStacks="${MODECO_DC_GLOBAL_BOOTSTACKS}"
+			bootStacks="${CONTECO_DC_GLOBAL_BOOTSTACKS}"
 			IFS=',' read -r -a stacks <<< "$bootStacks"
 			for stack in ${stacks[@]};
 			do
@@ -38,7 +38,7 @@ if [[ "$1" == "for-each-node" ]] ; then
 			executionplane-error "Method not implemented: ${CONTECO_NAME} $(basename $0)."
 			;;
 		shutdown)
-			bootStacks="${MODECO_DC_GLOBAL_BOOTSTACKS}"
+			bootStacks="${CONTECO_DC_GLOBAL_BOOTSTACKS}"
 			IFS=',' read -r -a stacks <<< "$bootStacks"
 			for stack in ${stacks[@]};
 			do
@@ -48,7 +48,7 @@ if [[ "$1" == "for-each-node" ]] ; then
 				done;
 			;;
 		start)
-			runStacks="${MODECO_DC_GLOBAL_RUNSTACKS}"
+			runStacks="${CONTECO_DC_GLOBAL_RUNSTACKS}"
 			IFS=',' read -r -a stacks <<< "$runStacks"
 			for stack in ${stacks[@]};
 			do
@@ -58,7 +58,7 @@ if [[ "$1" == "for-each-node" ]] ; then
 				done;
 			;;
 		stop)
-			runStacks="${MODECO_DC_GLOBAL_RUNSTACKS}"
+			runStacks="${CONTECO_DC_GLOBAL_RUNSTACKS}"
 			IFS=',' read -r -a stacks <<< "$runStacks"
 			for stack in ${stacks[@]};
 			do
