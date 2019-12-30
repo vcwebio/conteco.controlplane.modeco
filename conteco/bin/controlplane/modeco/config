@@ -19,7 +19,11 @@ if [[ "$1" == "for-each-node" ]] ; then
 			.base config $command $@
 			;;
 		module)
-			config-module $rootPath
+			if [[ "$CONTECO_NAME" == "conf" ]] ; then
+				config-module-conf $rootPath
+			else
+				executionplane-warning "Method not available for $CONTECO_TYPE.$CONTECO_NAME."
+			fi
 			;;
 		remove-crs)
 			.base config $command $@
