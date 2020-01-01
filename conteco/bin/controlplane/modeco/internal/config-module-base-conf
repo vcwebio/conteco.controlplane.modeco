@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+(
+rootPath=$1
+
+# update module base from array
+# copy full stack and settings from CONTECO_MODECO_BASE to .template
+destination="$rootPath/modeco"
+rm $destination/stacks/*.yml.template
+IFS=',' read -r -a moduleBases <<< "${CONTECO_MODECO_BASE}"
+for base in ${moduleBases[@]};
+do
+	mkdir $destination/import
+	imageName=${CONTECO_REALM}/conteco.$base
+	. executionplane-capture-output docker create $imageName
+	executionplane docker container cp $CONTECO_EXECUTIONPLANE_OUTPUT:/conteco/docker-compose/. $destination/import
+	cat $destination/import/environment.module >> $destination/settings.template.original
+	for f in $destination/import/stacks/*.yml;
+	do
+		filename=$(basename $f)
+		cp $f $destination/stacks/${filename}.template
+	done;
+	rm -r $destination/import
+done;
+
+# extract aggregated STACKNAMES, BOOTSTACKS, RUNSTACKS and VOLUMELIST
+globalStackNames=$(grep CONTECO_DC_GLOBAL_STACKNAMES $destination/settings.template.original | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')
+globalBootStacks=$(grep CONTECO_DC_GLOBAL_BOOTSTACKS $destination/settings.template.original | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')
+globalRunStacks=$(grep CONTECO_DC_GLOBAL_RUNSTACKS $destination/settings.template.original | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')
+globalVolumeList=$(grep CONTECO_DC_GLOBAL_VOLUME_LIST $destination/settings.template.original | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')
+
+# CONFIGURATION block
+DOLLAR="$"
+echo $'#!/usr/bin/env bash\n\n# START CONFIGURATION' > $destination/settings.template
+echo "export CONTECO_DC_GLOBAL_STACKNAMES_BASE=\"$globalStackNames\"
+export CONTECO_DC_GLOBAL_STACKNAMES=\"$globalStackNames\"
+export CONTECO_DC_GLOBAL_BOOTSTACKS=\"$globalBootStacks\"
+export CONTECO_DC_GLOBAL_RUNSTACKS=\"$globalRunStacks\"
+export CONTECO_DC_GLOBAL_VOLUME_LIST=\"$globalVolumeList\"
+export CONTECO_DC_GLOBAL_VOLUME_INITIALISED=\"\"
+# END CONFIGURATION
+" >> $destination/settings.template
+
+# OTHER VARIABLES block
+otherVariables=$(grep export $destination/settings.template.original | grep -v _GLOBAL | grep -v _PORTS | grep -v _DEPLOY | grep -v _NETWORKS | grep -v _VOLUMES)
+echo "# START OTHER VARIABLES" >> $destination/settings.template
+if [[ "$otherVariables" != "" ]] ; then
+	printf "%s\n" "$otherVariables" >> $destination/settings.template
+fi
+echo "# END OTHER VARIABLES
+" >> $destination/settings.template
+
+# VOLUMES block
+volumes=$(grep _VOLUMES $destination/settings.template.original | grep -v _GLOBAL)
+echo "# START VOLUMES VARIABLES" >> $destination/settings.template
+if [[ "$volumes" != "" ]] ; then
+	printf "%s\n" "$volumes" >> $destination/settings.template
+	globalVolumes=
+	IFS=',' read -r -a volumes <<< "${globalVolumeList}"
+	for volume in ${volumes[@]};
+	do
+		globalVolumes="$globalVolumes${DOLLAR}{CONTECO_TYPE}_$volume: { external: true },"
+	done;
+	echo "export CONTECO_DC_GLOBAL_VOLUMES=\"$(echo $globalVolumes | sed 's/.$//')\"" >> $destination/settings.template
+fi
+echo "# END VOLUMES VARIABLES
+" >> $destination/settings.template
+
+# PORTS block
+ports=$(grep _PORTS $destination/settings.template.original)
+echo "# START PORTS VARIABLES" >> $destination/settings.template
+if [[ "$ports" != "" ]] ; then
+	printf "%s\n" "$ports" >> $destination/settings.template
+fi
+echo "# END PORTS VARIABLES
+" >> $destination/settings.template
+
+# NETWORKS block
+networks=$(grep _NETWORKS $destination/settings.template.original | grep -v _GLOBAL)
+echo "# START NETWORKS VARIABLES" >> $destination/settings.template
+if [[ "$networks" != "" ]] ; then
+	printf "%s\n" "$networks" >> $destination/settings.template
+	echo "export CONTECO_DC_GLOBAL_NETWORKS=\"modeco_overlay: { external: true },${DOLLAR}{CONTECO_TYPE}_overlay: { external: true }\"" >> $destination/settings.template
+fi
+echo "# END NETWORKS VARIABLES
+" >> $destination/settings.template
+
+deploy=$(grep _DEPLOY $destination/settings.template.original)
+echo "# START DEPLOY VARIABLES" >> $destination/settings.template
+if [[ "$deploy" != "" ]] ; then
+	printf "%s\n" "$deploy" >> $destination/settings.template
+fi
+echo "# END DEPLOY VARIABLES" >> $destination/settings.template
+
+rm $destination/settings.template.original
+)

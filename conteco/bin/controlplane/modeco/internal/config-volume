@@ -4,7 +4,7 @@
 	rootPath=$2
 	. $rootPath/modeco/settings
 	volumePrefix=$(echo "${CONTECO_TYPE}" | tr '.-' '_')
-	IFS=',' read -r -a volumes <<< "${CONTECO_DC_GLOBAL_VOLUMES_INITIALISED}"
+	IFS=',' read -r -a volumes <<< "${CONTECO_DC_GLOBAL_VOLUME_INITIALISED}"
 	for volumeSettings in ${volumes[@]};
 	do
 		volumeName=$(echo $volumeSettings | cut -d':' -f 1)

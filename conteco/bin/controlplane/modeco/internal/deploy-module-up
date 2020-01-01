@@ -9,13 +9,13 @@ volumePrefix=$(echo "${CONTECO_TYPE}" | tr '.-' '_')
 IFS=',' read -r -a volumes <<< "${CONTECO_DC_GLOBAL_VOLUME_LIST}"
 for volume in ${volumes[@]};
 do
-	executionplane docker volume create "${volumePrefix}_${volume}"
+	controlplane-service docker volume create "${volumePrefix}_${volume}"
 	done;
 
-IFS=',' read -r -a volumes <<< "${CONTECO_DC_GLOBAL_VOLUMES_INITIALISED}"
+IFS=',' read -r -a volumes <<< "${CONTECO_DC_GLOBAL_VOLUME_INITIALISED}"
 for volumeSettings in ${volumes[@]};
 do
 	volumeName=$(echo $volumeSettings | cut -d':' -f 1)
 	volumeDir=$(echo $volumeSettings | cut -d':' -f 2)
-	executionplane --silent docker run -v ${volumePrefix}_${volumeName}:${volumeDir} -v ${CONTECO_PWD_VOLUME}/${CONTECO_REALM}/${CONTECO_ECOSYSTEM}.${CONTECO_TYPE}.${CONTECO_NAME}/modeco/volumes:/backup ${CONTECO_REALM}/${CONTECO_ECOSYSTEM}.${CONTECO_TYPE}.${CONTECO_NAME} --interactive tar -C / -xvf /backup/${volumeName}.tar
+	controlplane-service docker run -v ${volumePrefix}_${volumeName}:${volumeDir} -v ${CONTECO_PWD_VOLUME}/${CONTECO_REALM}/${CONTECO_ECOSYSTEM}.${CONTECO_TYPE}.${CONTECO_NAME}/modeco/volumes:/backup ${CONTECO_REALM}/${CONTECO_ECOSYSTEM}.${CONTECO_TYPE}.${CONTECO_NAME} --interactive tar -C / -xvf /backup/${volumeName}.tar
 	done;

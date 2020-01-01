@@ -5,12 +5,12 @@ rootPath=$1
 executionplane --silent docker network rm ${CONTECO_TYPE}_overlay
 
 # this should be restricted to module containers only, but how?
-executionplane --silent docker container prune --force
+controlplane-service docker container prune --force
 
 # create initialised module volumes on all nodes
 volumePrefix=$(echo "${CONTECO_TYPE}" | tr '.-' '_')
 IFS=',' read -r -a volumes <<< "${CONTECO_DC_GLOBAL_VOLUME_LIST}"
 for volume in ${volumes[@]};
 do
-	executionplane --silent docker volume rm --force ${volumePrefix}_${volume}
+	controlplane-service docker volume rm --force ${volumePrefix}_${volume}
 	done;
