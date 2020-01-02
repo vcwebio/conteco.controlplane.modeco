@@ -13,20 +13,22 @@ do
 	imageName=${CONTECO_REALM}/conteco.$base
 	. executionplane-capture-output docker create $imageName
 	executionplane docker container cp $CONTECO_EXECUTIONPLANE_OUTPUT:/conteco/docker-compose/. $destination/import
+	imageStackNames=$(grep CONTECO_DC_GLOBAL_STACKNAMES= $destination/import/environment | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')
+	IFS=',' read -r -a imageStacks <<< "${imageStackNames}"
 	cat $destination/import/environment.module >> $destination/settings.template.original
-	for f in $destination/import/stacks/*.yml;
+	for imageStack in ${imageStacks[@]};
 	do
-		filename=$(basename $f)
-		cp $f $destination/stacks/${filename}.template
+		source="$destination/import/stacks/$imageStack.docker-compose.yml"
+		cp $source $destination/stacks/${imageStack}.docker-compose.yml.template
 	done;
 	rm -r $destination/import
 done;
 
 # extract aggregated STACKNAMES, BOOTSTACKS, RUNSTACKS and VOLUMELIST
-globalStackNames=$(grep CONTECO_DC_GLOBAL_STACKNAMES $destination/settings.template.original | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')
-globalBootStacks=$(grep CONTECO_DC_GLOBAL_BOOTSTACKS $destination/settings.template.original | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')
-globalRunStacks=$(grep CONTECO_DC_GLOBAL_RUNSTACKS $destination/settings.template.original | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')
-globalVolumeList=$(grep CONTECO_DC_GLOBAL_VOLUME_LIST $destination/settings.template.original | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')
+globalStackNames=$(grep CONTECO_DC_GLOBAL_STACKNAMES= $destination/settings.template.original | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')
+globalBootStacks=$(grep CONTECO_DC_GLOBAL_BOOTSTACKS= $destination/settings.template.original | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')
+globalRunStacks=$(grep CONTECO_DC_GLOBAL_RUNSTACKS= $destination/settings.template.original | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')
+globalVolumeList=$(grep CONTECO_DC_GLOBAL_VOLUME_LIST= $destination/settings.template.original | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')
 
 # CONFIGURATION block
 DOLLAR="$"
