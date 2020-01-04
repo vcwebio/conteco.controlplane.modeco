@@ -1,34 +1,101 @@
 #!/usr/bin/env bash
 (
-	rootPath=$1
-	. $rootPath/modeco/settings
-	if [[ "${CONTECO_DC_GLOBAL_STACKNAMES}" == "" ]] ; then
-		executionplane-error "CANNOT CONFIGURE MODULE: No stack names found."
-	else
-		IFS=',' read -r -a stacks <<< "${CONTECO_DC_GLOBAL_STACKS}"
-		IFS=',' read -r -a stackNames <<< "${CONTECO_DC_GLOBAL_STACKNAMES}"
-		CONTECO_TYPE_ENV=$(echo "${CONTECO_TYPE^^}" | tr - _)
-		cp $rootPath/modeco/settings.template $rootPath/modeco/settings.module
-		for stackNumber in ${!stacks[@]};
-		do
-			STACKNAME_ENV=$(echo "${stackNames[stackNumber]^^}" | tr - _)
-			source=$rootPath/modeco/stacks/${stackNumber}.${stacks[stackNumber]}.docker-compose.yml.template
-			destination=$rootPath/modeco/stacks/${stackNames[stackNumber]}.docker-compose.yml
-			cat $source | envsubst '${CONTECO_TYPE}' > $destination
-			sed -i -e "s/CONTECO_DC_${stackNumber}_/${STACKNAME_ENV}_/g" $destination
-			sed -i -e "s/CONTECO_DC_${stackNumber}_/${STACKNAME_ENV}_/g" $rootPath/modeco/settings.module
-			done;
-		sed -i -e "s/CONTECO_DC_/${CONTECO_TYPE_ENV}_/g" $rootPath/modeco/settings.module
-
-		for stackName in ${stackNames[@]};
-		do
-			destination=$rootPath/modeco/stacks/${stackName}.docker-compose.yml
-			for stackNumber in ${!stacks[@]};
-			do
-				STACKNAME_ENV=$(echo "${stackNames[stackNumber]}" | tr - _)
-				sed -i -e "s/CONTECO_DC_${stackNumber}_/${STACKNAME_ENV}_/g" $destination
-			done;
-			sed -i -e "s/CONTECO_DC_/${CONTECO_TYPE_ENV}_/g" $destination
-		done;
+rootPath=$1
+basePath="$rootPath/modeco"
+. $basePath/settings
+settingsBase="$CONTECO_DC_GLOBAL_STACKNAMES_BASE"
+templateBase=$(grep CONTECO_DC_GLOBAL_STACKNAMES_BASE $basePath/settings.template | cut -d'"' -f 2)
+globalStackNames=
+if [[ "$settingsBase," != "" && "$settingsBase," != "$templateBase,"* && "$templateBase," != "$settingsBase,"* ]] ; then
+	executionplane-error "CONFIGURATION ERROR: settings STACKNAMES_BASE must be prefix of template STACKNAMES_BASE or vice-versa."
+	exit 1;
+fi
+rm $basePath/stacks/*.yml
+IFS=',' read -r -a stacks <<< "$templateBase"
+IFS=',' read -r -a stackNames <<< "${CONTECO_DC_GLOBAL_STACKNAMES}"
+for stackNumber in ${!stacks[@]};
+do
+	stack=${stacks[stackNumber]}
+	stackName=${stackNames[stackNumber]}
+	if [[ $stackName == "" ]] ; then
+		stackName=${stacks[stackNumber]}
 	fi
+	source=$basePath/stacks/$stack.docker-compose.yml.template
+	destination=$basePath/stacks/$stackName.docker-compose.yml
+	cat $source | envsubst '${CONTECO_TYPE}' | sed "s/CONTECO_DC_${stack^^}_/${stackName^^}_/g" | sed "s/conteco_overlay/modeco_overlay/g" > $destination
+	grep CONTECO_DC_${stack^^}_ $basePath/settings.template |  sed "s/CONTECO_DC_${stack^^}_/${stackName^^}_/g" >> $basePath/settings.base.original
+	globalStackNames="$globalStackNames$stackName,"
+done;
+
+
+# extract aggregated STACKNAMES, BOOTSTACKS, RUNSTACKS and VOLUMELIST
+#globalStackNames=$(grep CONTECO_DC_GLOBAL_STACKNAMES $destination/settings.template.original | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')
+globalBootStacks=$(grep CONTECO_DC_GLOBAL_BOOTSTACKS $basePath/settings.template | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')
+globalRunStacks=$(grep CONTECO_DC_GLOBAL_RUNSTACKS $basePath/settings.template | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')
+globalVolumeList=$(grep CONTECO_DC_GLOBAL_VOLUME_LIST $basePath/settings.template | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')
+
+# CONFIGURATION block
+DOLLAR="$"
+echo $'#!/usr/bin/env bash\n\n# START CONFIGURATION' > $basePath/settings.base
+echo "export CONTECO_DC_GLOBAL_STACKNAMES_BASE=\"$templateBase\"
+export CONTECO_DC_GLOBAL_STACKNAMES=\"$(echo $globalStackNames | sed 's/.$//')\"
+export CONTECO_DC_GLOBAL_BOOTSTACKS=\"$globalBootStacks\"
+export CONTECO_DC_GLOBAL_RUNSTACKS=\"$globalRunStacks\"
+export CONTECO_DC_GLOBAL_VOLUME_LIST=\"$globalVolumeList\"
+export CONTECO_DC_GLOBAL_VOLUME_INITIALISED=\"\"
+# END CONFIGURATION
+" >> $basePath/settings.base
+
+# OTHER VARIABLES block
+otherVariables=$(grep export $basePath/settings.base.original | grep -v _GLOBAL | grep -v _PORTS | grep -v _DEPLOY | grep -v _NETWORKS | grep -v _VOLUMES)
+echo "# START OTHER VARIABLES" >> $basePath/settings.base
+if [[ "$otherVariables" != "" ]] ; then
+	printf "%s\n" "$otherVariables" >> $basePath/settings.base
+fi
+echo "# END OTHER VARIABLES
+" >> $basePath/settings.base
+
+# VOLUMES block
+volumes=$(grep _VOLUMES $basePath/settings.base.original | grep -v _GLOBAL)
+echo "# START VOLUMES VARIABLES" >> $basePath/settings.base
+if [[ "$volumes" != "" ]] ; then
+	printf "%s\n" "$volumes" >> $basePath/settings.base
+	globalVolumes=
+	IFS=',' read -r -a volumes <<< "${globalVolumeList}"
+	for volume in ${volumes[@]};
+	do
+		globalVolumes="$globalVolumes${DOLLAR}{CONTECO_TYPE}_$volume: { external: true },"
+	done;
+	echo "export CONTECO_DC_GLOBAL_VOLUMES=\"$(echo $globalVolumes | sed 's/.$//')\"" >> $basePath/settings.base
+fi
+echo "# END VOLUMES VARIABLES
+" >> $basePath/settings.base
+
+# PORTS block
+ports=$(grep _PORTS $basePath/settings.base.original)
+echo "# START PORTS VARIABLES" >> $basePath/settings.base
+if [[ "$ports" != "" ]] ; then
+	printf "%s\n" "$ports" >> $basePath/settings.base
+fi
+echo "# END PORTS VARIABLES
+" >> $basePath/settings.base
+
+# NETWORKS block
+networks=$(grep _NETWORKS $basePath/settings.base.original | grep -v _GLOBAL)
+echo "# START NETWORKS VARIABLES" >> $basePath/settings.base
+if [[ "$networks" != "" ]] ; then
+	printf "%s\n" "$networks" >> $basePath/settings.base
+	echo "export CONTECO_DC_GLOBAL_NETWORKS=\"modeco_overlay: { external: true },${DOLLAR}{CONTECO_TYPE}_overlay: { external: true }\"" >> $destination/settings.template
+fi
+echo "# END NETWORKS VARIABLES
+" >> $basePath/settings.base
+
+deploy=$(grep _DEPLOY $basePath/settings.base.original)
+echo "# START DEPLOY VARIABLES" >> $basePath/settings.base
+if [[ "$deploy" != "" ]] ; then
+	printf "%s\n" "$deploy" >> $basePath/settings.base
+fi
+echo "# END DEPLOY VARIABLES" >> $basePath/settings.base
+
+rm $basePath/settings.base.original
 )

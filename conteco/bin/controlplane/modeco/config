@@ -19,10 +19,10 @@ if [[ "$1" == "for-each-node" ]] ; then
 			.base config $command $@
 			;;
 		module-base)
-			config-module-base-conf $rootPath
+			config-module-base $rootPath
 			;;
 		module)
-			config-module-conf $rootPath
+			config-module $rootPath
 			;;
 		remove-crs)
 			.base config $command $@
