@@ -7,23 +7,31 @@ mkdir $basePath/import
 chmod -R 777 $basePath/import
 rm $basePath/stacks/*.yml.template
 IFS=',' read -r -a moduleBases <<< "${CONTECO_DC_GLOBAL_BASE_LIST}"
+previousBase=
+previousBaseConfiguration=
 for base in ${moduleBases[@]};
 do
-	imageName=${CONTECO_REALM}/conteco.$base
-	. executionplane-capture-output docker create $imageName
-	executionplane docker container cp $CONTECO_EXECUTIONPLANE_OUTPUT:/conteco/docker-compose/. $basePath/import
-	chmod -R 777 $basePath/import
-	imageStackNames=$(grep CONTECO_DC_GLOBAL_STACKNAMES= $basePath/import/environment | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')
-	IFS=',' read -r -a imageStacks <<< "${imageStackNames}"
-	chmod -R 777 $basePath/import/environment.module
-	cat $basePath/import/environment.module >> $basePath/settings.template.original
-	for imageStack in ${imageStacks[@]};
-	do
-		source="$basePath/import/stacks/$imageStack.docker-compose.yml"
-		chmod -R 777 $source
-		cp $source $basePath/stacks/${imageStack}.docker-compose.yml.template
-	done;
-	rm -r $basePath/import/*
+	if [[ "$base" != "$previousBase" ]] ; then
+		imageName=${CONTECO_REALM}/conteco.$base
+		. executionplane-capture-output docker create $imageName
+		executionplane docker container cp $CONTECO_EXECUTIONPLANE_OUTPUT:/conteco/docker-compose/. $basePath/import
+		chmod -R 777 $basePath/import
+		previousBaseConfiguration=$(sed -n "/# START CONFIGURATION/,/# END CONFIGURATION/p" $basePath/import/environment)
+		imageStackNames=$(grep CONTECO_DC_GLOBAL_STACKNAMES= $basePath/import/environment | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')
+		IFS=',' read -r -a imageStacks <<< "${imageStackNames}"
+		chmod -R 777 $basePath/import/environment.module
+		cat $basePath/import/environment.module >> $basePath/settings.template.original
+		for imageStack in ${imageStacks[@]};
+		do
+			source="$basePath/import/stacks/$imageStack.docker-compose.yml"
+			chmod -R 777 $source
+			cp $source $basePath/stacks/${imageStack}.docker-compose.yml.template
+		done;
+		rm -r $basePath/import/*
+		previousBase="$base"
+	else
+		echo "$previousBaseConfiguration" >> $basePath/settings.template.original
+	fi
 done;
 rm -r $basePath/import
 
