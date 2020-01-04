@@ -21,6 +21,7 @@ if [[ "$1" == "for-each-node" ]] ; then
 	else
 		rootPath="${CONTECO_PWD}/$1/modeco"
 	fi
+	. $rootPath/settings.base
 	. $rootPath/settings
 	if [[ "$item" == "module" ]] ; then
 		# prepare the swarm node for stack deploy

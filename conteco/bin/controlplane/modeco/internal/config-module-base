@@ -3,26 +3,29 @@
 rootPath=$1
 basePath="$rootPath/modeco"
 . $basePath/settings
-# update module base from array
-# copy full stack and settings from CONTECO_DC_GLOBAL_BASE_LIST to .template
+mkdir $basePath/import
+chmod -R 777 $basePath/import
 rm $basePath/stacks/*.yml.template
 IFS=',' read -r -a moduleBases <<< "${CONTECO_DC_GLOBAL_BASE_LIST}"
 for base in ${moduleBases[@]};
 do
-	mkdir $basePath/import
 	imageName=${CONTECO_REALM}/conteco.$base
 	. executionplane-capture-output docker create $imageName
 	executionplane docker container cp $CONTECO_EXECUTIONPLANE_OUTPUT:/conteco/docker-compose/. $basePath/import
+	chmod -R 777 $basePath/import
 	imageStackNames=$(grep CONTECO_DC_GLOBAL_STACKNAMES= $basePath/import/environment | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')
 	IFS=',' read -r -a imageStacks <<< "${imageStackNames}"
+	chmod -R 777 $basePath/import/environment.module
 	cat $basePath/import/environment.module >> $basePath/settings.template.original
 	for imageStack in ${imageStacks[@]};
 	do
 		source="$basePath/import/stacks/$imageStack.docker-compose.yml"
+		chmod -R 777 $source
 		cp $source $basePath/stacks/${imageStack}.docker-compose.yml.template
 	done;
-	rm -r $basePath/import
+	rm -r $basePath/import/*
 done;
+rm -r $basePath/import
 
 # extract aggregated STACKNAMES, BOOTSTACKS, RUNSTACKS and VOLUMELIST
 globalStackNames=$(grep CONTECO_DC_GLOBAL_STACKNAMES= $basePath/settings.template.original | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')
@@ -33,7 +36,8 @@ globalVolumeList=$(grep CONTECO_DC_GLOBAL_VOLUME_LIST= $basePath/settings.templa
 # CONFIGURATION block
 DOLLAR="$"
 echo $'#!/usr/bin/env bash\n\n# START CONFIGURATION' > $basePath/settings.template
-echo "export CONTECO_DC_GLOBAL_STACKNAMES_BASE=\"$globalStackNames\"
+echo "export CONTECO_DC_GLOBAL_BASE_LIST=\"$CONTECO_DC_GLOBAL_BASE_LIST\"
+export CONTECO_DC_GLOBAL_STACKNAMES_BASE=\"$globalStackNames\"
 export CONTECO_DC_GLOBAL_STACKNAMES=\"$globalStackNames\"
 export CONTECO_DC_GLOBAL_BOOTSTACKS=\"$globalBootStacks\"
 export CONTECO_DC_GLOBAL_RUNSTACKS=\"$globalRunStacks\"

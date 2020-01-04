@@ -5,6 +5,7 @@ basePath="$rootPath/modeco"
 . $basePath/settings
 settingsBase="$CONTECO_DC_GLOBAL_STACKNAMES_BASE"
 templateBase=$(grep CONTECO_DC_GLOBAL_STACKNAMES_BASE $basePath/settings.template | cut -d'"' -f 2)
+templateBaseList=$(grep CONTECO_DC_GLOBAL_BASE_LIST $basePath/settings.template | cut -d'"' -f 2)
 globalStackNames=
 if [[ "$settingsBase," != "" && "$settingsBase," != "$templateBase,"* && "$templateBase," != "$settingsBase,"* ]] ; then
 	executionplane-error "CONFIGURATION ERROR: settings STACKNAMES_BASE must be prefix of template STACKNAMES_BASE or vice-versa."
@@ -37,7 +38,8 @@ globalVolumeList=$(grep CONTECO_DC_GLOBAL_VOLUME_LIST $basePath/settings.templat
 # CONFIGURATION block
 DOLLAR="$"
 echo $'#!/usr/bin/env bash\n\n# START CONFIGURATION' > $basePath/settings.base
-echo "export CONTECO_DC_GLOBAL_STACKNAMES_BASE=\"$templateBase\"
+echo "export CONTECO_DC_GLOBAL_BASE_LIST=\"$CONTECO_DC_GLOBAL_BASE_LIST\"
+export CONTECO_DC_GLOBAL_STACKNAMES_BASE=\"$templateBase\"
 export CONTECO_DC_GLOBAL_STACKNAMES=\"$(echo $globalStackNames | sed 's/.$//')\"
 export CONTECO_DC_GLOBAL_BOOTSTACKS=\"$globalBootStacks\"
 export CONTECO_DC_GLOBAL_RUNSTACKS=\"$globalRunStacks\"
@@ -98,4 +100,19 @@ fi
 echo "# END DEPLOY VARIABLES" >> $basePath/settings.base
 
 rm $basePath/settings.base.original
+
+IFS=',' read -r -a stacks <<< "$templateBase"
+IFS=',' read -r -a stackNames <<< "${CONTECO_DC_GLOBAL_STACKNAMES}"
+for stackNumber in ${!stacks[@]};
+do
+	stack=${stacks[stackNumber]}
+	stackName=${stackNames[stackNumber]}
+	if [[ "$stack" != "$stackName" ]] ; then
+		sed -i -e "s/_${stack}_/_${stackName}_/g" $basePath/settings.base
+		for f in $basePath/stacks/*.docker-compose.yml
+		do
+			sed -i -e "s/_${stack}_/_${stackName}_/g" $f
+		done;
+	fi
+done;
 )
