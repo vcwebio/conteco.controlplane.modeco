@@ -9,6 +9,7 @@ rm $basePath/stacks/*.yml.template
 IFS=',' read -r -a moduleBases <<< "${CONTECO_DC_GLOBAL_BASE_LIST}"
 previousBase=
 previousBaseConfiguration=
+moduleBasesStacks=
 for base in ${moduleBases[@]};
 do
 	if [[ "$base" != "$previousBase" ]] ; then
@@ -21,17 +22,20 @@ do
 		IFS=',' read -r -a imageStacks <<< "${imageStackNames}"
 		chmod -R 777 $basePath/import/environment.module
 		cat $basePath/import/environment.module >> $basePath/settings.template.original
+		let "stackCount = 0"
 		for imageStack in ${imageStacks[@]};
 		do
 			source="$basePath/import/stacks/$imageStack.docker-compose.yml"
 			chmod -R 777 $source
 			cp $source $basePath/stacks/${imageStack}.docker-compose.yml.template
+			let "stackCount = stackCount + 1"
 		done;
 		rm -r $basePath/import/*
 		previousBase="$base"
 	else
 		echo "$previousBaseConfiguration" >> $basePath/settings.template.original
 	fi
+	moduleBasesStacks="$moduleBasesStacks$stackCount,"
 done;
 rm -r $basePath/import
 
@@ -45,6 +49,7 @@ globalVolumeList=$(grep CONTECO_DC_GLOBAL_VOLUME_LIST= $basePath/settings.templa
 DOLLAR="$"
 echo $'#!/usr/bin/env bash\n\n# START CONFIGURATION' > $basePath/settings.template
 echo "export CONTECO_DC_GLOBAL_BASE_LIST=\"$CONTECO_DC_GLOBAL_BASE_LIST\"
+export CONTECO_DC_GLOBAL_BASE_LIST_STACKS=\"$moduleBasesStacks\"
 export CONTECO_DC_GLOBAL_STACKNAMES_BASE=\"$globalStackNames\"
 export CONTECO_DC_GLOBAL_STACKNAMES=\"$globalStackNames\"
 export CONTECO_DC_GLOBAL_BOOTSTACKS=\"$globalBootStacks\"

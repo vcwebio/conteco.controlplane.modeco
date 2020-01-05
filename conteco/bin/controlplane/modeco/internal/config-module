@@ -5,7 +5,7 @@ basePath="$rootPath/modeco"
 . $basePath/settings
 settingsBase="$CONTECO_DC_GLOBAL_STACKNAMES_BASE"
 templateBase=$(grep CONTECO_DC_GLOBAL_STACKNAMES_BASE $basePath/settings.template | cut -d'"' -f 2)
-templateBaseList=$(grep CONTECO_DC_GLOBAL_BASE_LIST $basePath/settings.template | cut -d'"' -f 2)
+templateBaseList=$(grep CONTECO_DC_GLOBAL_BASE_LIST= $basePath/settings.template | cut -d'"' -f 2)
 globalStackNames=
 if [[ "$settingsBase," != "" && "$settingsBase," != "$templateBase,"* && "$templateBase," != "$settingsBase,"* ]] ; then
 	executionplane-error "CONFIGURATION ERROR: settings STACKNAMES_BASE must be prefix of template STACKNAMES_BASE or vice-versa."
@@ -30,15 +30,16 @@ done;
 
 
 # extract aggregated STACKNAMES, BOOTSTACKS, RUNSTACKS and VOLUMELIST
-#globalStackNames=$(grep CONTECO_DC_GLOBAL_STACKNAMES $destination/settings.template.original | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')
+globalModuleBasesStacks=$(grep CONTECO_DC_GLOBAL_BASE_LIST_STACKS= $basePath/settings.template | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')
 globalBootStacks=$(grep CONTECO_DC_GLOBAL_BOOTSTACKS $basePath/settings.template | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')
 globalRunStacks=$(grep CONTECO_DC_GLOBAL_RUNSTACKS $basePath/settings.template | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')
-globalVolumeList=$(grep CONTECO_DC_GLOBAL_VOLUME_LIST $basePath/settings.template | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')
+globalVolumeList=$(grep CONTECO_DC_GLOBAL_VOLUME_LIST $basePath/settings.template | cut -d'"' -f 2 | tr '\n' ',' | sed 's/conteco_dc_//g' | sed 's/.$//')
 
 # CONFIGURATION block
 DOLLAR="$"
 echo $'#!/usr/bin/env bash\n\n# START CONFIGURATION' > $basePath/settings.base
 echo "export CONTECO_DC_GLOBAL_BASE_LIST=\"$CONTECO_DC_GLOBAL_BASE_LIST\"
+export CONTECO_DC_GLOBAL_BASE_LIST_STACKS=\"$globalModuleBasesStacks\"
 export CONTECO_DC_GLOBAL_STACKNAMES_BASE=\"$templateBase\"
 export CONTECO_DC_GLOBAL_STACKNAMES=\"$(echo $globalStackNames | sed 's/.$//')\"
 export CONTECO_DC_GLOBAL_BOOTSTACKS=\"$globalBootStacks\"
@@ -74,7 +75,7 @@ echo "# END VOLUMES VARIABLES
 " >> $basePath/settings.base
 
 # PORTS block
-ports=$(grep _PORTS $basePath/settings.base.original)
+ports=$(grep _PORTS $basePath/settings.base.original | grep -v _GLOBAL)
 echo "# START PORTS VARIABLES" >> $basePath/settings.base
 if [[ "$ports" != "" ]] ; then
 	printf "%s\n" "$ports" >> $basePath/settings.base
@@ -87,12 +88,12 @@ networks=$(grep _NETWORKS $basePath/settings.base.original | grep -v _GLOBAL)
 echo "# START NETWORKS VARIABLES" >> $basePath/settings.base
 if [[ "$networks" != "" ]] ; then
 	printf "%s\n" "$networks" >> $basePath/settings.base
-	echo "export CONTECO_DC_GLOBAL_NETWORKS=\"modeco_overlay: { external: true },${DOLLAR}{CONTECO_TYPE}_overlay: { external: true }\"" >> $destination/settings.template
+	echo "export CONTECO_DC_GLOBAL_NETWORKS=\"modeco_overlay: { external: true },${DOLLAR}{CONTECO_TYPE}_overlay: { external: true }\"" >> $basePath/settings.base
 fi
 echo "# END NETWORKS VARIABLES
 " >> $basePath/settings.base
 
-deploy=$(grep _DEPLOY $basePath/settings.base.original)
+deploy=$(grep _DEPLOY $basePath/settings.base.original | grep -v _GLOBAL)
 echo "# START DEPLOY VARIABLES" >> $basePath/settings.base
 if [[ "$deploy" != "" ]] ; then
 	printf "%s\n" "$deploy" >> $basePath/settings.base
@@ -101,18 +102,37 @@ echo "# END DEPLOY VARIABLES" >> $basePath/settings.base
 
 rm $basePath/settings.base.original
 
+limit="0"
+IFS=',' read -r -a baseList <<< "${CONTECO_DC_GLOBAL_BASE_LIST}"
+IFS=',' read -r -a baseListStacks <<< "${globalModuleBasesStacks}"
 IFS=',' read -r -a stacks <<< "$templateBase"
 IFS=',' read -r -a stackNames <<< "${CONTECO_DC_GLOBAL_STACKNAMES}"
 for stackNumber in ${!stacks[@]};
 do
-	stack=${stacks[stackNumber]}
-	stackName=${stackNames[stackNumber]}
-	if [[ "$stack" != "$stackName" ]] ; then
-		sed -i -e "s/_${stack}_/_${stackName}_/g" $basePath/settings.base
-		for f in $basePath/stacks/*.docker-compose.yml
+	base=${baseList[stackNumber]}
+# must do double loop over stacks in base
+	(( counter1Start = limit ))
+	(( counter1 = counter1Start ))
+	baseStacks=${baseListStacks[stackNumber]}
+	previousBase="$base"
+	(( limit = limit + baseStacks))
+	while (( counter1 < limit ))
+	do
+		stack=${stacks[counter1]}
+		stackName=${stackNames[counter1]}
+		sed -i -e "s/conteco_dc_${stack}/${stackName}/g" $basePath/settings.base
+		counter2="$counter1Start"
+		while (( counter2 < limit ))
 		do
-			sed -i -e "s/_${stack}_/_${stackName}_/g" $f
+			stackName2=${stackNames[counter2]}
+			sed -i -e "s/conteco_dc_${stack}/${stackName}/g" $basePath/stacks/$stackName2.docker-compose.yml
+			(( counter2 = counter2 + 1 ))
 		done;
-	fi
+		(( counter1 = counter1 + 1 ))
+	done;
+done;
+for f in $basePath/stacks/*.docker-compose.yml;
+do
+	sed -i -e "s/conteco_dc_//g" $f
 done;
 )

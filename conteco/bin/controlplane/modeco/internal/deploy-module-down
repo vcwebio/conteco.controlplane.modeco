@@ -13,4 +13,4 @@ IFS=',' read -r -a volumes <<< "${CONTECO_DC_GLOBAL_VOLUME_LIST}"
 for volume in ${volumes[@]};
 do
 	controlplane-service docker volume rm --force ${volumePrefix}_${volume}
-	done;
+done;
