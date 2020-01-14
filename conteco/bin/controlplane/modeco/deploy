@@ -17,9 +17,9 @@ if [[ "$1" == "for-each-node" ]] ; then
 		command="up"
 	fi
 	if [[ $# -gt 1 ]] ; then
-		rootPath="${CONTECO_PWD}/${BASH_ARGV[0]}/modeco"
+		rootPath="/conteco/pwd/${BASH_ARGV[0]}/modeco"
 	else
-		rootPath="${CONTECO_PWD}/$1/modeco"
+		rootPath="/conteco/pwd/$1/modeco"
 	fi
 	. $rootPath/settings.base
 	. $rootPath/settings

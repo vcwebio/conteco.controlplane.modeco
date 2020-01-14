@@ -5,7 +5,7 @@ if [[ "$1" == "for-each-node" ]] ; then
     . executionplane-invoke "$0 $@"
 	command=$1
 	shift
-	rootPath="${CONTECO_PWD}/${BASH_ARGV[0]}/modeco"
+	rootPath="/conteco/pwd/${BASH_ARGV[0]}/modeco"
 	. $rootPath/settings
 	if [[ $# -gt 1 ]] ; then
 		stackName="$1"
