@@ -14,22 +14,22 @@ if [[ "$1" == "for-each-node" ]] ; then
 	case $command in
 		build)
 			.base config for-each-node $command $@
-			;;
+		;;
 		increment)
 			.base config for-each-node $command $@
-			;;
+		;;
 		module-base)
 			config-module-base $rootPath
-			;;
+		;;
 		module)
 			config-module $rootPath
-			;;
+		;;
 		remove-crs)
 			.base config for-each-node $command $@
-			;;
+		;;
 		set-version)
 			.base config for-each-node $command $@
-			;;
+		;;
 		volume)
 			if [[ $# -gt 1 ]] ; then
 				volumeName=$1
@@ -37,12 +37,12 @@ if [[ "$1" == "for-each-node" ]] ; then
 				volumeName="all"
 			fi
 			config-volume $volumeName $rootPath
-			;;
+		;;
 		*)
 			executionplane-error "Method not recognised: $command."
-            ;;
+    ;;
 	esac
-    executionplane-complete
+  executionplane-complete
 )
 else
   export PATH="$CONTECO_EXECUTIONPLANE_APIINTERNALPATH_MODECO"
