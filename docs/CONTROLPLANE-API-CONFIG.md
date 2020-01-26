@@ -4,7 +4,7 @@
 
 # `config` API - Full
 
-`controlplane.base` implements the following common methods of the `config` API section:
+`controlplane.modeco` implements the following common methods of the `config` API section:
 
 __`build`__  
 Generates the `Dockerfile.static` with the `environment` configuration.  

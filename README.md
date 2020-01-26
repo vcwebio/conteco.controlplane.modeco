@@ -1,4 +1,4 @@
-# conteco.controlplane.modeco
+# controlplane.modeco - ContEco
 
 The `controlplane.modeco` image of the __ContEco__ container ecosystem.
 See `conteco.docs.overview` for more information on the ContEco ecosystem.
@@ -46,29 +46,5 @@ Run API - of modules or solutions.
 Full implementation - [run API in detail](./docs/CONTROLPLANE-API-RUN.md)
 
 ## `controlplane` CLI
-
-`controlplane.conteco` inherits the CLI implementation from `controlplane.base`.  
-The scripts to invoke the CLI are extracted from the image to the current folder by:
-
-```bash
-# Extracting the CLI instantiation scripts from the controlplane image
-docker run -v %cd%:/conteco/pwd vcwebio/conteco.controlplane.base --interactive extract-cli windows # on Windows
-docker run -v $(pwd):/conteco/pwd vcwebio/conteco.controlplane.base --interactive extract-cli linux # on linux
-
-# Starting the CLI
-# on linux
-./start conteco # to start the controlplane for image configuration
-./start modeco # to start the controlplane for module management
-# on windows
-start.bat conteco # to start the controlplane for image configuration
-start.bat modeco # to start the controlplane for module management
-
-# Invoking the API
-# when conteco CLI is invoked
-conteco [API method] [arguments]
-
-# when modeco CLI is invoked
-modeco [API method] [arguments]
-```
 
 See `conteco.docs.overview` for more information on how to extract and use the commandline interface.
