@@ -1,4 +1,4 @@
-[`controlplane.conteco`](../README.md) >> `config` API - Full
+[`controlplane.modeco`](../README.md) >> `config` API - Full
 
 -----
 
@@ -38,4 +38,4 @@ Configures the volume initial data states by creating backups of the current sta
 Initialised volumes are declared in a separate list.
 
 -----
-[`controlplane.conteco`](../README.md) >> `config` API - Full
+[`controlplane.modeco`](../README.md) >> `config` API - Full

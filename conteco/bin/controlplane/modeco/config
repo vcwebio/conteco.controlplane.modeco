@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
-if [[ "$1" == "for-each-node" ]] ; then
 (
+	export PATH="$CONTECO_EXECUTIONPLANE_APIINTERNALPATH_MODECO"
+	. executionplane-invoke "$0 $@"
+	imageName="${@: -1}"
+	rootPath="/conteco/pwd/${imageName}"
+	. $rootPath/environment
+
 	shift
     . executionplane-invoke "$0 $@"
 	if [[ $# -gt 1 ]] ; then
@@ -12,23 +17,11 @@ if [[ "$1" == "for-each-node" ]] ; then
 	command=$1
 	shift
 	case $command in
-		build)
-			.base config for-each-node $command $@
-		;;
-		increment)
-			.base config for-each-node $command $@
-		;;
 		module-base)
 			config-module-base $rootPath
 		;;
 		module)
 			config-module $rootPath
-		;;
-		remove-crs)
-			.base config for-each-node $command $@
-		;;
-		set-version)
-			.base config for-each-node $command $@
 		;;
 		volume)
 			if [[ $# -gt 1 ]] ; then
@@ -39,12 +32,8 @@ if [[ "$1" == "for-each-node" ]] ; then
 			config-volume $volumeName $rootPath
 		;;
 		*)
-			executionplane-error "Method not recognised: $command."
+			.base config $command $@
     ;;
 	esac
   executionplane-complete
 )
-else
-  export PATH="$CONTECO_EXECUTIONPLANE_APIINTERNALPATH_MODECO"
-	for-each $(basename $0) $@
-fi

@@ -1,4 +1,4 @@
-[`controlplane.base`](../README.md) >> API Auxiliary Methods
+[`controlplane.modeo`](../README.md) >> API Auxiliary Methods
 
 -----
 
@@ -38,4 +38,4 @@ __`deploy-up`__
 Generates the actual docker-compose.yml file applying the _environment_ non global settings and starts the service stack.
 
 -----
-[`controlplane.base`](../README.md) >> Auxiliary API
+[`controlplane.modeco`](../README.md) >> Auxiliary API

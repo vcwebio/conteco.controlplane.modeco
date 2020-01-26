@@ -1,4 +1,4 @@
-[`controlplane.conteco`](../README.md) >> `run` API - Full
+[`controlplane.modeco`](../README.md) >> `run` API - Full
 
 -----
 
@@ -44,4 +44,4 @@ Stops the service stacks registered as run stacks.
 Run stacks implement the dynamic functionality of the module.  
 
 -----
-[`controlplane.conteco`](../README.md) >> `run` API - Full
+[`controlplane.modeco`](../README.md) >> `run` API - Full

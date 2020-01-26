@@ -1,41 +1,41 @@
 #!/usr/bin/env bash
-if [[ "$1" == "for-each-node" ]] ; then
 (
-	shift
-  . executionplane-invoke "$0 $@"
-	command=$1
-	shift
-	rootPath="/conteco/pwd/${BASH_ARGV[0]}/modeco"
+	export PATH="$CONTECO_EXECUTIONPLANE_APIINTERNALPATH_MODECO"
+	. executionplane-invoke "$0 $@"
+	imageName="${@: -1}"
+	rootPath="/conteco/pwd/${imageName}"
+	. $rootPath/environment
+
 	. $rootPath/settings
-	if [[ $# -gt 1 ]] ; then
-		stackName="$1"
+	if [[ $# -gt 2 ]] ; then
+		stackName="$2"
 	else
 		stackName="all"
 	fi
-	case $command in
+	case $1 in
 		boot)
 			bootStacks="${CONTECO_DC_GLOBAL_BOOTSTACKS}"
 			IFS=',' read -r -a stacks <<< "$bootStacks"
 			for stack in ${stacks[@]};
 			do
 				if [[ " all $stack "  == *"$stackName"* ]] ; then
-					deploy "for-each-node" $stack up "${BASH_ARGV[0]}"
+					deploy $stack up "${imageName}"
 				fi
 			done;
 		;;
 		pause)
-			executionplane-error "Method not implemented: ${CONTECO_NAME} $(basename $0)."
+			executionplane-error "Method not implemented: $1."
 		;;
 		reboot)
-			run "for-each-node" shutdown $@
-			run "for-each-node" boot $@
+			run shutdown ${@:2:$#-1}
+			run boot ${@:2:$#-1}
 		;;
 		restart)
-			run "for-each-node" stop $@
-			run "for-each-node" start $@
+			run stop ${@:2:$#-1}
+			run start ${@:2:$#-1}
 		;;
 		resume)
-			executionplane-error "Method not implemented: ${CONTECO_NAME} $(basename $0)."
+			executionplane-error "Method not implemented: $1."
 		;;
 		shutdown)
 			bootStacks="${CONTECO_DC_GLOBAL_BOOTSTACKS}"
@@ -43,7 +43,7 @@ if [[ "$1" == "for-each-node" ]] ; then
 			for stack in ${stacks[@]};
 			do
 				if [[ " all $stack "  == *"$stackName"* ]] ; then
-					deploy "for-each-node" $stack down "${BASH_ARGV[0]}"
+					deploy $stack down "${imageName}"
 				fi
 			done;
 		;;
@@ -53,7 +53,7 @@ if [[ "$1" == "for-each-node" ]] ; then
 			for stack in ${stacks[@]};
 			do
 				if [[ " all $stack "  == *"$stackName"* ]] ; then
-					deploy "for-each-node" $stack up "${BASH_ARGV[0]}"
+					deploy $stack up "${imageName}"
 				fi
 			done;
 		;;
@@ -63,17 +63,13 @@ if [[ "$1" == "for-each-node" ]] ; then
 			for stack in ${stacks[@]};
 			do
 				if [[ " all $stack "  == *"$stackName"* ]] ; then
-					deploy "for-each-node" $stack down "${BASH_ARGV[0]}"
+					deploy $stack down "${imageName}"
 				fi
 			done;
 		;;
 		*)
-			executionplane-error "Method not implemented: ${CONTECO_NAME} $(basename $0)."
-	;;
+			.base run $@
+		;;
 	esac
-    executionplane-complete
+  executionplane-complete
 )
-else
-    export PATH="$CONTECO_EXECUTIONPLANE_APIINTERNALPATH_MODECO"
-	for-each $(basename $0) $@
-fi

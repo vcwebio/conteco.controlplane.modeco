@@ -1,4 +1,4 @@
-[`controlplane.conteco`](../README.md) >> `deploy` API - Full
+[`controlplane.modeco`](../README.md) >> `deploy` API - Full
 
 -----
 
@@ -25,4 +25,4 @@ __`[stack] up`__
 Deploys the service stack(s) with overlay network and runs it.  
 
 -----
-[`controlplane.conteco`](../README.md) >> `deploy` API - Full
+[`controlplane.modeco`](../README.md) >> `deploy` API - Full
