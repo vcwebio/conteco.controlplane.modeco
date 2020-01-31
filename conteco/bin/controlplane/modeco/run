@@ -17,7 +17,7 @@
 			IFS=',' read -r -a stacks <<< "$bootStacks"
 			for stack in ${stacks[@]};
 			do
-				if [[ " all $stack "  == *"$stackName"* ]] ; then
+				if [[ " all $stack "  == *" $stackName"* ]] ; then
 					deploy $stack up "${imageName}"
 				fi
 			done;
@@ -41,7 +41,7 @@
 			IFS=',' read -r -a stacks <<< "$bootStacks"
 			for stack in ${stacks[@]};
 			do
-				if [[ " all $stack "  == *"$stackName"* ]] ; then
+				if [[ " all $stack "  == *" $stackName"* ]] ; then
 					deploy $stack down "${imageName}"
 				fi
 			done;
@@ -51,7 +51,7 @@
 			IFS=',' read -r -a stacks <<< "$runStacks"
 			for stack in ${stacks[@]};
 			do
-				if [[ " all $stack "  == *"$stackName"* ]] ; then
+				if [[ " all $stack "  == *" $stackName"* ]] ; then
 					deploy $stack up "${imageName}"
 				fi
 			done;
@@ -61,7 +61,7 @@
 			IFS=',' read -r -a stacks <<< "$runStacks"
 			for stack in ${stacks[@]};
 			do
-				if [[ " all $stack "  == *"$stackName"* ]] ; then
+				if [[ " all $stack "  == *" $stackName"* ]] ; then
 					deploy $stack down "${imageName}"
 				fi
 			done;
