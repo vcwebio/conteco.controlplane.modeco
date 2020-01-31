@@ -5,7 +5,6 @@
 	imageName="${@: -1}"
 	rootPath="/conteco/pwd/${imageName}"
 	. $rootPath/environment
-
 	case $1 in
 		--info)
 			.base run $@
@@ -24,8 +23,8 @@
 				item="module"
 				command="up"
 			fi
-			. $rootPath/settings.base
-			. $rootPath/settings
+			. $rootPath/modeco/settings.base
+			. $rootPath/modeco/settings
 			if [[ "$item" == "module" ]] ; then
 				# prepare the swarm node for stack deploy
 				case $command in
@@ -44,7 +43,7 @@
 						;;
 				esac
 			else
-				composefile="$rootPath/stacks/$item.docker-compose.yml"
+				composefile="$rootPath/modeco/stacks/$item.docker-compose.yml"
 				stackName="${CONTECO_TYPE}_$(echo $item | tr '.-' '_' )"
 				case $command in
 					down)

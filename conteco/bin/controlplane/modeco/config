@@ -6,14 +6,6 @@
 	rootPath="/conteco/pwd/${imageName}"
 	. $rootPath/environment
 
-	shift
-    . executionplane-invoke "$0 $@"
-	if [[ $# -gt 1 ]] ; then
-		rootPath="/conteco/pwd/${BASH_ARGV[0]}"
-	else
-		rootPath="/conteco/pwd/$1"
-	fi
-	imageName="${CONTECO_REALM}/${CONTECO_ECOSYSTEM}.${CONTECO_TYPE}.${CONTECO_NAME}"
 	command=$1
 	shift
 	case $command in

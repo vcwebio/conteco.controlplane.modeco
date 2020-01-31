@@ -5,8 +5,7 @@
 	imageName="${@: -1}"
 	rootPath="/conteco/pwd/${imageName}"
 	. $rootPath/environment
-
-	. $rootPath/settings
+	. $rootPath/modeco/settings
 	if [[ $# -gt 2 ]] ; then
 		stackName="$2"
 	else

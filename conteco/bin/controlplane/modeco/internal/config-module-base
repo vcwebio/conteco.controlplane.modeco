@@ -13,7 +13,7 @@ moduleBasesStacks=
 for base in ${moduleBases[@]};
 do
 	if [[ "$base" != "$previousBase" ]] ; then
-		imageName=${CONTECO_REALM}/conteco.$base
+		imageName=${CONTECO_REALM_RUNTIME}/conteco.$base
 		. executionplane-capture-output docker create $imageName
 		executionplane docker container cp $CONTECO_EXECUTIONPLANE_OUTPUT:/conteco/docker-compose/. $basePath/import
 		chmod -R 777 $basePath/import

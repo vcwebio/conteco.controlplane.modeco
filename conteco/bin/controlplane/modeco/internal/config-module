@@ -23,7 +23,7 @@ do
 	fi
 	source=$basePath/stacks/$stack.docker-compose.yml.template
 	destination=$basePath/stacks/$stackName.docker-compose.yml
-	cat $source | envsubst '${CONTECO_TYPE}' | sed "s/CONTECO_DC_${stack^^}_/${stackName^^}_/g" | sed "s/conteco_overlay/modeco_overlay/g" > $destination
+	cat $source | envsubst '${CONTECO_TYPE}' | sed "s/CONTECO_DC_${stack^^}_/${stackName^^}_/g" > $destination
 	grep CONTECO_DC_${stack^^}_ $basePath/settings.template |  sed "s/CONTECO_DC_${stack^^}_/${stackName^^}_/g" >> $basePath/settings.base.original
 	globalStackNames="$globalStackNames$stackName,"
 done;
