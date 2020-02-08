@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 executionplane-info "Executing controlplane-service"
 name=$(create-random)
-executionplane docker service create --name "controlplane-$name" -d --mode global --restart-condition none --mount type=bind,source=/var/run/docker.sock,destination=/var/run/docker.sock vcwebio/conteco.controlplane.base --executiontag "$CONTECO_EXECUTIONTAG" $@
+executionplane docker service create --name "controlplane-$name" -d --mode global --restart-condition none --mount type=bind,source=/var/run/docker.sock,destination=/var/run/docker.sock ${CONTECO_REGISTRY}${CONTECO_REALM_RUNTIME}/conteco.controlplane.base --executiontag "$CONTECO_EXECUTIONTAG" $@
 continue="true"
 while [[ "true" == "$continue" ]] ;
 do
