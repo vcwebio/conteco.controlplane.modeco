@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+(
+rootPath=$1
+basePath="$rootPath/modeco"
+. $basePath/settings
+
+if [[ "$CONTECO_TYPE" == "package" ]] ; then
+
+	destination="${basePath}/packages/${CONTECO_NAME}"
+	source="/conteco/docker-compose"
+	packageConteco="$(grep CONTECO_DC_GLOBAL_PACKAGE_CONTECO= ${destination}/settings.conteco | cut -d'"' -f 2)"
+	imageName="${CONTECO_REALM_RUNTIME}/conteco.${packageConteco}"
+	. executionplane-capture-output docker create $imageName
+	contecoImage="$CONTECO_EXECUTIONPLANE_OUTPUT"
+
+	executionplane docker container cp ${contecoImage}:/${source}/environment.module ${destination}/settings.conteco
+	imageStackNames="$(grep CONTECO_DC_GLOBAL_STACKNAMES= ${destination}/settings.conteco | cut -d'"' -f 2)"
+	IFS=',' read -r -a imageStacks <<< "${imageStackNames}"
+	for imageStack in ${imageStacks[@]};
+	do
+		executionplane docker container cp ${contecoImage}:/${source}/stacks/${imageStack}.docker-compose.yml ${destination}/${imageStack}.docker-compose.yml.conteco
+	done;
+
+else
+
+	# ITERATE OVER PACKAGE FOLDERS, EXTRACT ORIGINAL PACKAGE NAME FROM FIRST STACK NAME FROM settings.conteco
+	#	imageStackNames="$(grep CONTECO_DC_GLOBAL_STACKNAMES= ${destination}/settings.conteco | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')"
+	executionplane-error "config package no implemented for modules."
+
+
+fi
+)

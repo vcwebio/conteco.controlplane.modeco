@@ -9,19 +9,18 @@
 	command=$1
 	shift
 	case $command in
-		module-base)
-			config-module-base $rootPath
-		;;
 		module)
 			config-module $rootPath
 		;;
+		package)
+			config-package $rootPath
+		;;
 		volume)
+			stack="all"
 			if [[ $# -gt 1 ]] ; then
-				volumeName=$1
-			else
-				volumeName="all"
+				stack=$1
 			fi
-			config-volume $volumeName $rootPath
+			config-volume $imageName $rootPath $stack
 		;;
 		*)
 			.base config $command $@

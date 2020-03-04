@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+rootPath="$1"
+basePath="$rootPath/modeco"
+DOLLAR='$'
+
+echo $'#!/usr/bin/env bash\n\n' > $basePath/deploy-local-down
+echo $'#!/usr/bin/env bash\n\n' > $basePath/deploy-local-up
+
+echo "prefix=\"${CONTECO_TYPE}_${DOLLAR}2\"
+" >> $basePath/deploy-local-down
+echo "prefix=\"${CONTECO_TYPE}_${DOLLAR}2\"
+" >> $basePath/deploy-local-up
+
+echo "
+executionplane --silent docker container prune --force
+" >> $basePath/deploy-local-down
+
+IFS=',' read -r -a volumes <<< "${CONTECO_DC_GLOBAL_VOLUME_LIST}"
+for volume in ${volumes[@]};
+do
+	echo "if [[ \"${volume}\" == \"${DOLLAR}prefix\"* ]] ; then
+	executionplane --silent docker volume rm --force ${volume}
+	fi
+	" >> $basePath/deploy-local-down
+	echo "if [[ \"${volume}\" == \"${DOLLAR}prefix\"* ]] ; then
+	executionplane --silent docker volume create ${volume}
+	fi
+	" >> $basePath/deploy-local-up
+done;
+
+IFS=',' read -r -a volumes <<< "${CONTECO_DC_GLOBAL_VOLUME_INITIALISED}"
+for volumeSettings in ${volumes[@]};
+do
+	volumeName=$(echo $volumeSettings | cut -d':' -f 1)
+	volumeDir=$(echo $volumeSettings | cut -d':' -f 2)
+	echo "if [[ \"${volumeName}\" == \"${DOLLAR}prefix\"* ]] ; then
+	executionplane --silent docker run -v ${volumeName}:${volumeDir} ${DOLLAR}{CONTECO_REGISTRY}${DOLLAR}1 --interactive tar -C / -xvf /modeco/volumes/${volumeName}.tar
+	fi
+	" >> $basePath/deploy-local-up
+done;

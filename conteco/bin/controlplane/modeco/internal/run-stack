@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+imageName="$1"
+action="$2"
+stackName="$3"
+
+if [[ " boot shutdown " == *" $action"* ]] ; then
+	stackList="${CONTECO_DC_GLOBAL_BOOTSTACKS}"
+fi
+if [[ " start stop " == *" $action"* ]] ; then
+	stackList="${CONTECO_DC_GLOBAL_RUNSTACKS}"
+fi
+IFS=',' read -r -a folderList <<< "${CONTECO_DC_GLOBAL_STACKS}"
+
+IFS=',' read -r -a stacks <<< "$stackList"
+for stack in ${stacks[@]};
+do
+	if [[ " all $stack "  == *" $stackName"* ]] ; then
+		if [[ " boot start " == *" $action"* ]] ; then
+			tmpfile=$(mktemp /tmp/docker-compose.yml.XXXXXX)
+			arguments="-c $tmpfile $stack"
+			for folder in ${folderList[@]};
+			do
+				if [[ "$stack" == "$folder"* ]] ; then
+					composeFile="modeco/packages/$folder/$stack.docker-compose.yml"
+				fi
+			done;
+			extract-file $imageName $composeFile | envsubst > $tmpfile
+			cat $tmpfile
+			executionplane  docker stack deploy $arguments
+			rm $tmpfile
+		elif [[ " shutdown stop " == *" $action"* ]] ; then
+			executionplane docker stack rm "$CONTECO_TYPE_$stack"
+		fi
+	fi
+done;

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+method="$1"
+imageName="$2"
+stack="$3"
+export CONTECO_NETWORKLOCAL="${CONTECO_TYPE}"
+
+# create module overlay network - global
+if [[ "$method" == *"down"* ]] ; then
+  executionplane --silent docker network rm ${CONTECO_NETWORKLOCAL}_overlay
+fi
+if [[ "$method" == *"up"* ]] ; then
+  executionplane --silent docker network create -d overlay ${CONTECO_NETWORKLOCAL}_overlay
+fi
+
+# create module package volumes - on all nodes
+controlplane-service .invoke deploy "local-$method" "$stack" "$imageName"
