@@ -3,33 +3,24 @@ imageName="$1"
 action="$2"
 stackName="$3"
 
-if [[ " boot shutdown " == *" $action"* ]] ; then
-	stackList="${CONTECO_DC_GLOBAL_BOOTSTACKS}"
-fi
-if [[ " start stop " == *" $action"* ]] ; then
-	stackList="${CONTECO_DC_GLOBAL_RUNSTACKS}"
-fi
-IFS=',' read -r -a folderList <<< "${CONTECO_DC_GLOBAL_STACKS}"
-
-IFS=',' read -r -a stacks <<< "$stackList"
-for stack in ${stacks[@]};
-do
-	if [[ " all $stack "  == *" $stackName"* ]] ; then
+extract-resource $imageName "modeco/module-stacks" | grep "$action" | grep "$stackName" | while read -r line ; do
+		IFS=',' read -r -a columns <<< "$line"
+		stacktype=${columns[0]}
+		package=${columns[1]}
+		instance=${columns[2]}
+		stack=${columns[3]}
 		if [[ " boot start " == *" $action"* ]] ; then
 			tmpfile=$(mktemp /tmp/docker-compose.yml.XXXXXX)
 			arguments="-c $tmpfile $stack"
-			for folder in ${folderList[@]};
-			do
-				if [[ "$stack" == "$folder"* ]] ; then
-					composeFile="modeco/packages/$folder/$stack.docker-compose.yml"
-				fi
-			done;
-			extract-file $imageName $composeFile | envsubst > $tmpfile
+			composeFile="modeco/packages/$package/$instance/$stack.docker-compose.yml"
+			(
+			. invoke-script $imageName "modeco/packages/$package/$instance/settings"
+			extract-resource $imageName $composeFile | envsubst > $tmpfile
+			)
 			cat $tmpfile
 			executionplane  docker stack deploy $arguments
 			rm $tmpfile
 		elif [[ " shutdown stop " == *" $action"* ]] ; then
-			executionplane docker stack rm "$CONTECO_TYPE_$stack"
+			executionplane docker stack rm "$stack"
 		fi
-	fi
-done;
+done

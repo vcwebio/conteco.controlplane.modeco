@@ -1,21 +1,18 @@
 #!/usr/bin/env bash
-rootPath="$1"
+rootPath=$1
 basePath="$rootPath/modeco"
 DOLLAR='$'
 
 echo $'#!/usr/bin/env bash\n\n' > $basePath/deploy-local-down
-echo $'#!/usr/bin/env bash\n\n' > $basePath/deploy-local-up
-
 echo "prefix=\"${CONTECO_TYPE}_${DOLLAR}2\"
 " >> $basePath/deploy-local-down
-echo "prefix=\"${CONTECO_TYPE}_${DOLLAR}2\"
-" >> $basePath/deploy-local-up
+cp $basePath/deploy-local-down $basePath/deploy-local-up
 
 echo "
 executionplane --silent docker container prune --force
 " >> $basePath/deploy-local-down
 
-IFS=',' read -r -a volumes <<< "${CONTECO_DC_GLOBAL_VOLUME_LIST}"
+IFS=$'\n' read -d '' -r -a volumes < $basePath/module-volumes
 for volume in ${volumes[@]};
 do
 	echo "if [[ \"${volume}\" == \"${DOLLAR}prefix\"* ]] ; then
@@ -28,7 +25,7 @@ do
 	" >> $basePath/deploy-local-up
 done;
 
-IFS=',' read -r -a volumes <<< "${CONTECO_DC_GLOBAL_VOLUME_INITIALISED}"
+IFS=$'\n' read -d '' -r -a volumes < $basePath/module-volumes-initialised
 for volumeSettings in ${volumes[@]};
 do
 	volumeName=$(echo $volumeSettings | cut -d':' -f 1)
@@ -38,3 +35,5 @@ do
 	fi
 	" >> $basePath/deploy-local-up
 done;
+
+chmod -R 777 $basePath

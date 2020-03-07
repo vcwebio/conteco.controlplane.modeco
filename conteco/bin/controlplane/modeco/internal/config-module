@@ -1,37 +1,72 @@
 #!/usr/bin/env bash
-(
+
 rootPath=$1
 basePath="$rootPath/modeco"
-. $basePath/settings
 
+export CONTECO_NETWORKLOCAL=$(echo "${CONTECO_TYPE}" | tr - _)
+export CONTECO_NETWORKGLOBAL="${CONTECO_ECOSYSTEM_RUNTIME}"
+
+
+# reset module settings files
+rm ${basePath}/module-stacks
+rm ${basePath}/module-volumes
+rm ${basePath}/module-volumes-initialised
+
+# FOR MODULES PUT DOUBLE FOLDER LOOP - PACKAGE AND PACKAGE INSTANCE - AND AMEND APPROPRIATE VARIABLES
+
+# for packages, simple apply appropriate environment variables on .conteco files
+# package settings become module settings with PACKAGE_CONTECO removed
+folderPath="${basePath}/packages/${CONTECO_NAME}"
+source="$folderPath/settings.conteco"
+destination="$folderPath/${CONTECO_NAME}/settings"
 export CONTECO_STACKPREFIX="${CONTECO_TYPE}_${CONTECO_NAME}"
-export CONTECO_NETWORKLOCAL="${CONTECO_TYPE}"
-export CONTECO_NETWORKGLOBAL="${CONTECO_REALM_RUNTIME}"
 
-if [[ "$CONTECO_TYPE" == "package" ]] ; then
-
-	# for packages, simple apply appropriate environment variables on .conteco files
-	# package settings become module settings with PACKAGE_CONTECO removed
-	folderPath="${basePath}/packages/${CONTECO_NAME}"
-	source="$folderPath/settings.conteco"
-	destination="$folderPath/settings"
-	cat $source | envsubst '${CONTECO_STACKPREFIX} ${CONTECO_NETWORKLOCAL} ${CONTECO_NETWORKGLOBAL}' | sed "s/# START CONFIGURATION/# START CONFIGURATION\\nexport CONTECO_DC_GLOBAL_STACKS=\"$CONTECO_NAME\"/g" | sed "s/# END CONFIGURATION/export CONTECO_DC_GLOBAL_VOLUME_INITIALISED=\"\"\\n# END CONFIGURATION/g" > $destination
-	cp $destination ${basePath}/settings.module
-	sed -i '/export CONTECO_DC_GLOBAL_PACKAGE_CONTECO=/d' ${basePath}/settings.module
-	rm $folderPath/*.docker-compose.yml ;
-	for f in $folderPath/*.docker-compose.yml.conteco ;
+# extract package settings
+cat $source | envsubst '${CONTECO_STACKPREFIX} ${CONTECO_NETWORKLOCAL} ${CONTECO_NETWORKGLOBAL}' | sed "s/# END CONFIGURATION/export CONTECO_DC_GLOBAL_VOLUME_INITIALISED=\"\"\\n# END CONFIGURATION/g" > ${destination}.package
+if [[ ! -f $destination ]] ; then
+	cp ${destination}.package $destination
+fi
+(
+	. ${destination}.package
+	# add boot stacks to module-stacks
+	IFS=',' read -r -a stacks <<< "${CONTECO_DC_GLOBAL_BOOTSTACKS}"
+	for stack in ${stacks[@]};
 	do
-		destination="$(echo $f | sed "s/yml.conteco/yml/g" )"
-		cat $f | envsubst '${CONTECO_TYPE} ${CONTECO_STACKPREFIX} ${CONTECO_NETWORKLOCAL} ${CONTECO_NETWORKGLOBAL}' > $destination
+		echo "boot/shutdown,${CONTECO_NAME},${CONTECO_NAME},$stack" >> ${basePath}/module-stacks
+	done;
+	# add other stacks to module-stacks
+	IFS=',' read -r -a stacks <<< "${CONTECO_DC_GLOBAL_RUNSTACKS}"
+	for stack in ${stacks[@]};
+	do
+		echo "start/stop,${CONTECO_NAME},${CONTECO_NAME},$stack" >> ${basePath}/module-stacks
 	done;
 
-else
+	# add volumes to module-volumes
+	IFS=',' read -r -a volumes <<< "${CONTECO_DC_GLOBAL_VOLUME_LIST}"
+	for volume in ${volumes[@]};
+	do
+		echo "$volume" >> ${basePath}/module-volumes
+	done;
 
-	# module configuration
-	. config-module-module $rootPath
-
-fi
-
-# create the deploy-local script
-. config-module-deploy-local $rootPath
+	# add initialised-volumes to module-volumes-initialised
+	# initialised volumes are taken from package instance configuration
+	. ${destination}
+	IFS=',' read -r -a volumes <<< "${CONTECO_DC_GLOBAL_VOLUME_INITIALISED}"
+	for volumeSettings in ${volumes[@]};
+	do
+		echo "$volumeSettings" >> ${basePath}/module-volumes-initialised
+	done;
 )
+rm $folderPath/${CONTECO_NAME}/*.docker-compose.yml ;
+for f in $folderPath/*.docker-compose.yml.conteco ;
+do
+	destination="$(echo $f | sed "s/\/${CONTECO_NAME}\//\/${CONTECO_NAME}\/${CONTECO_NAME}\//g" | sed "s/yml.conteco/yml/g" )"
+	cat $f | envsubst '${CONTECO_TYPE} ${CONTECO_STACKPREFIX} ${CONTECO_NETWORKLOCAL} ${CONTECO_NETWORKGLOBAL}' > $destination
+done;
+
+# add empty line to ensure the files exist
+echo "" >> ${basePath}/module-stacks
+echo "" >> ${basePath}/module-volumes
+echo "" >> ${basePath}/module-volumes-initialised
+
+chmod -R 777 $basePath

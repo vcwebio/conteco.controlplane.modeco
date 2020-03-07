@@ -4,8 +4,6 @@
 	. executionplane-invoke "$0 $@"
 	imageName="${@: -1}"
 	. invoke-script $imageName environment
-	. invoke-script $imageName /modeco/settings
-	stack="all"
 	if [[ $# -gt 2 ]] ; then
 		stack="$2"
 	fi

@@ -1,32 +1,59 @@
 #!/usr/bin/env bash
-(
 rootPath=$1
 basePath="$rootPath/modeco"
-. $basePath/settings
 
-if [[ "$CONTECO_TYPE" == "package" ]] ; then
+for f in $basePath/packages/*
+do
 
-	destination="${basePath}/packages/${CONTECO_NAME}"
-	source="/conteco/docker-compose"
+	packageName=$(basename $f)
+	destination="${basePath}/packages/$packageName"
+
 	packageConteco="$(grep CONTECO_DC_GLOBAL_PACKAGE_CONTECO= ${destination}/settings.conteco | cut -d'"' -f 2)"
-	imageName="${CONTECO_REALM_RUNTIME}/conteco.${packageConteco}"
-	. executionplane-capture-output docker create $imageName
-	contecoImage="$CONTECO_EXECUTIONPLANE_OUTPUT"
+	if [[ "$CONTECO_TYPE" == "package" ]] ; then
 
-	executionplane docker container cp ${contecoImage}:/${source}/environment.module ${destination}/settings.conteco
+		if [[ ! -d $destination/${CONTECO_NAME} ]] ; then
+      mkdir $destination/${CONTECO_NAME}
+		fi
+		source="conteco/docker-compose"
+		imageName="${CONTECO_REALM_RUNTIME}/conteco.${packageConteco}"
+		extract-resource $imageName ${source}/environment.module > ${destination}/settings.conteco
+		oldStackName="$(grep CONTECO_DC_GLOBAL_STACKNAMES= ${destination}/settings.conteco | cut -d'"' -f 2 | cut -d',' -f 1)"
+		newStackName="conteco_dc_${packageName}"
+
+	else
+
+		source="modeco/packages/$packageName"
+		imageName="${CONTECO_REALM_RUNTIME}/modeco.package.$packageName"
+		extract-resource $imageName ${source}/settings.conteco > ${destination}/settings.conteco
+
+	fi
+
+	rm ${destination}/*.docker-compose.yml.conteco
 	imageStackNames="$(grep CONTECO_DC_GLOBAL_STACKNAMES= ${destination}/settings.conteco | cut -d'"' -f 2)"
 	IFS=',' read -r -a imageStacks <<< "${imageStackNames}"
 	for imageStack in ${imageStacks[@]};
 	do
-		executionplane docker container cp ${contecoImage}:/${source}/stacks/${imageStack}.docker-compose.yml ${destination}/${imageStack}.docker-compose.yml.conteco
+		if [[ "$CONTECO_TYPE" == "package" ]] ; then
+      extract-resource $imageName ${source}/stacks/${imageStack}.docker-compose.yml > ${destination}/${imageStack}.docker-compose.yml.conteco
+		else
+			extract-resource $imageName ${source}/${imageStack}.docker-compose.yml > ${destination}/${imageStack}.docker-compose.yml.conteco
+		fi
 	done;
 
-else
+	if [[ "$newStackName" != "$oldStackName" ]] ; then
+		sed -i -e "s/${oldStackName^^}_/${newStackName^^}_/g" $destination/settings.conteco
+		sed -i -e "s/${oldStackName}/${newStackName}/g" $destination/settings.conteco
+		for imageStack in ${imageStacks[@]};
+		do
+			newImageStack=$(echo "$imageStack" | sed "s/${oldStackName}/${newStackName}/g")
+			if [[ "conteco_dc_$packageName" != "$oldStackName" ]] ; then
+				sed -i -e "s/${oldStackName^^}_/${newStackName^^}_/g" ${destination}/${imageStack}.docker-compose.yml.conteco
+				sed -i -e "s/${oldStackName}_/${newStackName}_/g" ${destination}/${imageStack}.docker-compose.yml.conteco
+			fi
+			mv ${destination}/${imageStack}.docker-compose.yml.conteco ${destination}/${newImageStack}.docker-compose.yml.conteco
+		done;
+	fi
 
-	# ITERATE OVER PACKAGE FOLDERS, EXTRACT ORIGINAL PACKAGE NAME FROM FIRST STACK NAME FROM settings.conteco
-	#	imageStackNames="$(grep CONTECO_DC_GLOBAL_STACKNAMES= ${destination}/settings.conteco | cut -d'"' -f 2 | tr '\n' ',' | sed 's/.$//')"
-	executionplane-error "config package no implemented for modules."
+done;
 
-
-fi
-)
+chmod -R 777 $basePath
