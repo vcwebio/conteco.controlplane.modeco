@@ -36,7 +36,7 @@ do
 		if [[ "$CONTECO_TYPE" == "package" ]] ; then
       extract-resource $imageName ${source}/stacks/${imageStack}.docker-compose.yml > ${destination}/${imageStack}.docker-compose.yml.conteco
 		else
-			extract-resource $imageName ${source}/${imageStack}.docker-compose.yml > ${destination}/${imageStack}.docker-compose.yml.conteco
+			extract-resource $imageName ${source}/${imageStack}.docker-compose.yml.conteco > ${destination}/${imageStack}.docker-compose.yml.conteco
 		fi
 	done;
 

@@ -11,9 +11,10 @@ extract-resource $imageName "modeco/module-stacks" | grep "$action" | grep "$sta
 		stack=${columns[3]}
 		if [[ " boot start " == *" $action"* ]] ; then
 			tmpfile=$(mktemp /tmp/docker-compose.yml.XXXXXX)
-			arguments="-c $tmpfile $stack"
+			arguments="-c $tmpfile ${CONTECO_TYPE}_$stack"
 			composeFile="modeco/packages/$package/$instance/$stack.docker-compose.yml"
 			(
+			. invoke-script $imageName "modeco/packages/$package/$instance/settings.package"
 			. invoke-script $imageName "modeco/packages/$package/$instance/settings"
 			extract-resource $imageName $composeFile | envsubst > $tmpfile
 			)
@@ -21,6 +22,6 @@ extract-resource $imageName "modeco/module-stacks" | grep "$action" | grep "$sta
 			executionplane  docker stack deploy $arguments
 			rm $tmpfile
 		elif [[ " shutdown stop " == *" $action"* ]] ; then
-			executionplane docker stack rm "$stack"
+			executionplane docker stack rm "${CONTECO_TYPE}_$stack"
 		fi
 done
