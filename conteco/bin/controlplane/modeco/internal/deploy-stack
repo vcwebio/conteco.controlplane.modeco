@@ -13,4 +13,4 @@ if [[ "$method" == *"up"* ]] ; then
 fi
 
 # create module package volumes - on all nodes
-controlplane-service .invoke deploy "local-$method" "$stack" "${CONTECO_REGISTRY}$imageName"
+controlplane-service deploy "local-$method" "$stack" "${CONTECO_REGISTRY}$imageName"
