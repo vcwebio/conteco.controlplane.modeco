@@ -15,8 +15,19 @@ executionplane --silent docker container prune --force
 IFS=$'\n' read -d '' -r -a volumes < $basePath/module-volumes
 for volume in ${volumes[@]};
 do
+	#	executionplane --silent docker volume rm --force ${volume}
 	echo "if [[ \"${volume}\" == \"${DOLLAR}prefix\"* ]] ; then
-	executionplane --silent docker volume rm --force ${volume}
+		continue=\"true\"
+		while [[ \"true\" == \"${DOLLAR}continue\" ]] ;
+		do
+			executionplane docker volume rm \"${volume}\"
+			result=$(docker volume ls | grep \"${volume}\")
+			if [[ \"${DOLLAR}result\" == \"\" ]] ; then
+				continue=\"false\"
+			else
+				sleep 3;
+			fi
+		done;
 	fi
 	" >> $basePath/deploy-local-down
 	echo "if [[ \"${volume}\" == \"${DOLLAR}prefix\"* ]] ; then
