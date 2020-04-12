@@ -16,7 +16,10 @@ do
 		fi
 		source="conteco/docker-compose"
 		imageName="${CONTECO_REALM_RUNTIME}/conteco.${packageConteco}"
-		extract-resource $imageName ${source}/environment.module > ${destination}/settings.conteco
+		tmpfile=$(mktemp /tmp/extract_resource.XXXXXX)
+		extract-resource $imageName ${source}/environment.module $tmpfile
+		cat $tmpfile > ${destination}/settings.conteco
+		rm $tmpfile
 		oldStackName="$(grep CONTECO_DC_GLOBAL_STACKNAMES= ${destination}/settings.conteco | cut -d'"' -f 2 | cut -d',' -f 1)"
 		newStackName="conteco_dc_${packageName}"
 
@@ -24,7 +27,10 @@ do
 
 		source="modeco/packages/$packageName"
 		imageName="${CONTECO_REALM_RUNTIME}/modeco.package.$packageName"
-		extract-resource $imageName ${source}/settings.conteco > ${destination}/settings.conteco
+		tmpfile=$(mktemp /tmp/extract_resource.XXXXXX)
+		extract-resource $imageName ${source}/settings.conteco $tmpfile
+		cat $tmpfile > ${destination}/settings.conteco
+		rm $tmpfile
 
 	fi
 
@@ -34,9 +40,15 @@ do
 	for imageStack in ${imageStacks[@]};
 	do
 		if [[ "$CONTECO_TYPE" == "package" ]] ; then
-      extract-resource $imageName ${source}/stacks/${imageStack}.docker-compose.yml > ${destination}/${imageStack}.docker-compose.yml.conteco
+			tmpfile=$(mktemp /tmp/docker-compose.yml.XXXXXX)
+			extract-resource $imageName ${source}/stacks/${imageStack}.docker-compose.yml $tmpfile
+			cat $tmpfile > ${destination}/${imageStack}.docker-compose.yml.conteco
+			rm $tmpfile
 		else
-			extract-resource $imageName ${source}/${imageStack}.docker-compose.yml.conteco > ${destination}/${imageStack}.docker-compose.yml.conteco
+			tmpfile=$(mktemp /tmp/docker-compose.yml.XXXXXX)
+			extract-resource $imageName ${source}/${imageStack}.docker-compose.yml.conteco $tmpfile
+			cat $tmpfile > ${destination}/${imageStack}.docker-compose.yml.conteco
+			rm $tmpfile
 		fi
 	done;
 
