@@ -19,7 +19,7 @@
 			config-package $rootPath
 		;;
 		volume)
-			stack="all"
+			stack=""
 			if [[ $# -gt 1 ]] ; then
 				stack=$1
 			fi
