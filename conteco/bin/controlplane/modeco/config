@@ -9,6 +9,12 @@
 	command=$1
 	shift
 	case $command in
+		all)
+			config build $@
+			config package $@
+			config module $@
+			config deploy $@
+		;;
 		deploy)
 			config-deploy $rootPath
 		;;

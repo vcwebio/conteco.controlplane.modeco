@@ -9,6 +9,7 @@ if [[ "$method" == *"down"* ]] ; then
   executionplane --silent docker network rm ${CONTECO_NETWORKLOCAL}_overlay
 fi
 if [[ "$method" == *"up"* ]] ; then
+  executionplane --silent docker network create -d overlay modeco_overlay
   executionplane --silent docker network create -d overlay ${CONTECO_NETWORKLOCAL}_overlay
 fi
 

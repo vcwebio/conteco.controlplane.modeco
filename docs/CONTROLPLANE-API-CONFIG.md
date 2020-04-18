@@ -6,6 +6,9 @@
 
 `controlplane.modeco` implements the following common methods of the `config` API section:
 
+__`all`__  
+Consists of config build, config package, config module and config deploy.
+
 __`build`__  
 Generates the `Dockerfile.static` with the `environment` configuration.  
 Should be executed after an update to the variables in the `environment` file.  
