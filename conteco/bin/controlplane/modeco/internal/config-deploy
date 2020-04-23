@@ -21,7 +21,7 @@ do
 		while [[ \"true\" == \"${DOLLAR}continue\" ]] ;
 		do
 			executionplane docker volume rm \"${volume}\"
-			result=$(docker volume ls | grep \"${volume}\")
+			result=${DOLLAR}(docker volume ls | grep \"${volume}\")
 			if [[ \"${DOLLAR}result\" == \"\" ]] ; then
 				continue=\"false\"
 			else
