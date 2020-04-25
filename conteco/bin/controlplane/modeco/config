@@ -18,6 +18,9 @@
 		deploy)
 			config-deploy $rootPath
 		;;
+		exec)
+			config-exec $rootPath $@
+		;;
 		module)
 			config-module $rootPath
 		;;

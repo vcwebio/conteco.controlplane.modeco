@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+rootPath="$1"
+script="$2"
+shift
+shift
+scriptPath="$rootPath/scripts/$script"
+executionplane-info "Script Path: $scriptPath"
+
+if [[ -f $scriptPath ]] ; then
+	executionplane $scriptPath $@
+else
+	executionplane-error "$script: The script does not exist."
+fi

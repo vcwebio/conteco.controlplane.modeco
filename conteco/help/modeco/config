@@ -11,6 +11,13 @@
 # The build option regenerates the Dockerfile.static from the environment settings.
 # Dockerfile.static allows the image to be build with a simple docker build.
 #
+# config deploy
+# Configure the deploy resources of the module.
+#
+# config exec
+# Execute the script with arguments supplied.
+# The script should be in the /script folder.
+#
 # config increment [revision/minor/major]
 # The increment option increments the version number of the format vx.y.z
 #
@@ -18,9 +25,8 @@
 # Configures the module service stacks from the imported ContEco service stacks.
 # This includes renaming the stacks using the module specific names.
 #
-# config module-base
-# Imports the service stack assets from the ContEco images and stages them for module configuration.
-# Module service stacks assets are cloned from the imported assets.
+# config package
+# Configure the packages of the module.
 #
 # config remove-crs
 # This method removes Windows CRs from repository file without file extension or .md and .static file extension.
