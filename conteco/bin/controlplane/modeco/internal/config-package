@@ -16,8 +16,9 @@ do
 		fi
 		source="conteco/docker-compose"
 		imageName="${CONTECO_REALM_RUNTIME}/conteco.${packageConteco}"
+		imageTag="${CONTECO_TAG}"
 		tmpfile=$(mktemp /tmp/extract_resource.XXXXXX)
-		extract-resource $imageName ${source}/environment.module $tmpfile
+		extract-resource $imageName ${source}/environment.module $tmpfile $imageTag
 		cat $tmpfile > ${destination}/settings.conteco
 		rm $tmpfile
 		oldStackName="$(grep CONTECO_DC_GLOBAL_STACKNAMES= ${destination}/settings.conteco | cut -d'"' -f 2 | cut -d',' -f 1)"
@@ -28,7 +29,9 @@ do
 		source="modeco/packages/$packageName"
 		imageName="${CONTECO_REALM_RUNTIME}/modeco.package.$packageName"
 		tmpfile=$(mktemp /tmp/extract_resource.XXXXXX)
-		extract-resource $imageName ${source}/settings.conteco $tmpfile
+# must force image extraction if tag is not current in on disk repository
+# need to source CONTECTO_TAG from existing settings.conteco if it exists
+		extract-resource $imageName ${source}/settings.conteco $tmpfile $imageTag
 		cat $tmpfile > ${destination}/settings.conteco
 		rm $tmpfile
 
@@ -41,12 +44,12 @@ do
 	do
 		if [[ "$CONTECO_TYPE" == "package" ]] ; then
 			tmpfile=$(mktemp /tmp/docker-compose.yml.XXXXXX)
-			extract-resource $imageName ${source}/stacks/${imageStack}.docker-compose.yml $tmpfile
+			extract-resource $imageName ${source}/stacks/${imageStack}.docker-compose.yml $tmpfile $imageTag
 			cat $tmpfile > ${destination}/${imageStack}.docker-compose.yml.conteco
 			rm $tmpfile
 		else
 			tmpfile=$(mktemp /tmp/docker-compose.yml.XXXXXX)
-			extract-resource $imageName ${source}/${imageStack}.docker-compose.yml.conteco $tmpfile
+			extract-resource $imageName ${source}/${imageStack}.docker-compose.yml.conteco $tmpfile $imageTag
 			cat $tmpfile > ${destination}/${imageStack}.docker-compose.yml.conteco
 			rm $tmpfile
 		fi
