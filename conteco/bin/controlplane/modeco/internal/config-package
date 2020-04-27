@@ -28,9 +28,8 @@ do
 
 		source="modeco/packages/$packageName"
 		imageName="${CONTECO_REALM_RUNTIME}/modeco.package.$packageName"
+		imageTag="$(grep CONTECO_DC_GLOBAL_PACKAGE_TAG= ${destination}/settings.conteco | cut -d'"' -f 2)"
 		tmpfile=$(mktemp /tmp/extract_resource.XXXXXX)
-# must force image extraction if tag is not current in on disk repository
-# need to source CONTECTO_TAG from existing settings.conteco if it exists
 		extract-resource $imageName ${source}/settings.conteco $tmpfile $imageTag
 		cat $tmpfile > ${destination}/settings.conteco
 		rm $tmpfile
