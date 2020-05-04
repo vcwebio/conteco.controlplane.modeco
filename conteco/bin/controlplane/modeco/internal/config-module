@@ -22,7 +22,10 @@ do
 		if [[ -d $instanceFolder ]] ; then
 
 			instanceName=$(basename $instanceFolder)
-			export CONTECO_STACKPREFIX="${CONTECO_TYPE}_$instanceName"
+			export CONTECO_STACKPREFIX="package_$instanceName"
+			if [[ "$CONTECO_TYPE" != "package" ]] ; then
+				export CONTECO_STACKPREFIX="${CONTECO_TYPE}_${CONTECO_NAME}_$instanceName"
+			fi
 			export CONTECO_URLPREFIX="${CONTECO_TYPE}/$instanceName"
 
 			# extract and process package settings

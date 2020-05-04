@@ -3,30 +3,50 @@ imageName="$1"
 action="$2"
 stackName="$3"
 
+if [[ "$stackName" == "task_"* ]] ; then
+	isTask="true"
+else
+	isTask="false"
+fi
+
+if [[ "$stackName" == "_"* ]] ; then
+	stackSelector="$stackName"
+else
+	stackSelector=",$stackName"
+fi
+
+stackprefix="${CONTECO_TYPE}"
+if [[ "$CONTECO_TYPE" != "package" ]] ; then
+	stackprefix="${CONTECO_TYPE}_${CONTECO_NAME}"
+fi
+
 tmpfilef=$(mktemp /tmp/extract-resource.XXXXXX)
+
 extract-resource $imageName "modeco/module-stacks" $tmpfilef
-cat $tmpfilef | grep "$action" | grep "$stackName" | while read -r line ; do
+cat $tmpfilef | grep "$action" | grep "$stackSelector" | while read -r line ; do
 		IFS=',' read -r -a columns <<< "$line"
 		stacktype=${columns[0]}
 		package=${columns[1]}
 		instance=${columns[2]}
 		stack=${columns[3]}
-		if [[ " boot start " == *" $action"* ]] ; then
-			(
-			tmpfilep=$(mktemp /tmp/docker-compose.yml.XXXXXX)
-			tmpfile=$(mktemp /tmp/docker-compose.yml.XXXXXX)
-			composeFile="modeco/packages/$package/$instance/$stack.docker-compose.yml"
-			. invoke-script $imageName "modeco/packages/$package/$instance/settings.package"
-			. invoke-script $imageName "modeco/packages/$package/$instance/settings"
-			extract-resource $imageName $composeFile $tmpfilep
-			cat $tmpfilep | envsubst > $tmpfile
-			cat $tmpfile
-			executionplane  docker stack deploy -c $tmpfile ${CONTECO_TYPE}_$stack
-			rm $tmpfilep
-			rm $tmpfile
-			)
-		elif [[ " shutdown stop " == *" $action"* ]] ; then
-			executionplane docker stack rm "${CONTECO_TYPE}_$stack"
+		if [[ ( "$isTask" == "true" && "$stack" == "task_"* ) || ( "$isTask" == "false" && "$stack" != "task_"* ) ]] ; then
+			if [[ " boot start " == *" $action"* ]] ; then
+				(
+				tmpfilep=$(mktemp /tmp/docker-compose.yml.XXXXXX)
+				tmpfile=$(mktemp /tmp/docker-compose.yml.XXXXXX)
+				composeFile="modeco/packages/$package/$instance/$stack.docker-compose.yml"
+				. invoke-script $imageName "modeco/packages/$package/$instance/settings.package"
+				. invoke-script $imageName "modeco/packages/$package/$instance/settings"
+				extract-resource $imageName $composeFile $tmpfilep
+				cat $tmpfilep | envsubst > $tmpfile
+				cat $tmpfile
+				executionplane  docker stack deploy -c $tmpfile "${stackprefix}_$stack"
+				rm $tmpfilep
+				rm $tmpfile
+				)
+			elif [[ " shutdown stop " == *" $action"* ]] ; then
+				executionplane docker stack rm "${stackprefix}_$stack"
+			fi
 		fi
 done
 rm $tmpfilef
