@@ -43,7 +43,7 @@ do
 	volumeDir=$(echo $volumeSettings | cut -d':' -f 2)
 	if [[ -d "$rootPath/modeco/volumes/${volumeName}" ]] ; then
 		echo "if [[ \"${volumeName}\" == \"${DOLLAR}prefix\"* ]] ; then
-			executionplane --silent docker run -v ${volumeName}:${volumeDir} ${DOLLAR}{CONTECO_REGISTRY}${DOLLAR}1 --interactive cp -r * ${volumeDir}
+			executionplane --silent docker run -v ${volumeName}:${volumeDir} ${DOLLAR}{CONTECO_REGISTRY}${DOLLAR}1 --interactive cp -r /modeco/volumes/${volumeName}/* ${volumeDir}
 		fi
 		" >> $basePath/deploy-local-up
 	else
