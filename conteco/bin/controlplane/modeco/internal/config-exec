@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
-rootPath="$1"
-script="$2"
+imageName="$1"
+rootPath="$2"
+script="$3"
+shift
 shift
 shift
 scriptPath="$rootPath/scripts/$script"
 executionplane-info "Script Path: $scriptPath"
 
 if [[ -f $scriptPath ]] ; then
-	chmod 777 $scriptPath
-	executionplane $scriptPath $@
+	. invoke-script $imageName environment
 else
 	executionplane-error "$script: The script does not exist."
 fi

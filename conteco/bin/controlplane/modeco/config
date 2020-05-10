@@ -19,7 +19,7 @@
 			config-deploy $rootPath
 		;;
 		exec)
-			config-exec $rootPath $@
+			config-exec $imageName $rootPath $@
 		;;
 		module)
 			config-module $rootPath
