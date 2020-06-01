@@ -5,11 +5,11 @@ script="$3"
 shift
 shift
 shift
-scriptPath="$rootPath/scripts/$script"
-executionplane-info "Script Path: $scriptPath"
+scriptPath="scripts/$script"
+executionplane-info "Script Path: $rootPath/$scriptPath"
 
-if [[ -f $scriptPath ]] ; then
-	. invoke-script $imageName environment
+if [[ -f $rootPath/$scriptPath ]] ; then
+	. invoke-script $imageName $scriptPath
 else
 	executionplane-error "$script: The script does not exist."
 fi
