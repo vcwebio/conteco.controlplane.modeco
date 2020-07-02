@@ -11,9 +11,11 @@
 	case $command in
 		all)
 			config build $@
-			config package $@
-			config module $@
-			config deploy $@
+			if [[  " backup " != *"$CONTECO_TYPE"* ]] ; then
+				config package $@
+				config module $@
+				config deploy $@
+			fi
 		;;
 		deploy)
 			config-deploy $rootPath
