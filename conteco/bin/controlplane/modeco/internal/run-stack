@@ -3,6 +3,9 @@ imageName="$1"
 action="$2"
 stackName="$3"
 
+export CONTECO_NETWORKLOCAL=$(echo "${CONTECO_TYPE}" | tr - _)
+export CONTECO_NETWORKGLOBAL="${CONTECO_ECOSYSTEM_RUNTIME}"
+
 if [[ "$stackName" == "task_"* ]] ; then
 	isTask="true"
 else
@@ -32,6 +35,11 @@ cat $tmpfilef | grep "$action" | grep "$stackSelector" | while read -r line ; do
 		if [[ ( "$isTask" == "true" && "$stack" == "task_"* ) || ( "$isTask" == "false" && "$stack" != "task_"* ) ]] ; then
 			if [[ " boot start " == *" $action"* ]] ; then
 				(
+				export CONTECO_STACKPREFIX="package_$instance"
+				if [[ "$CONTECO_TYPE" != "package" ]] ; then
+					export CONTECO_STACKPREFIX="${CONTECO_TYPE}_${CONTECO_NAME}_$instance"
+				fi
+				export CONTECO_URLPREFIX="${CONTECO_TYPE}/$instance"
 				tmpfilep=$(mktemp /tmp/docker-compose.yml.XXXXXX)
 				tmpfile=$(mktemp /tmp/docker-compose.yml.XXXXXX)
 				composeFile="modeco/packages/$package/$instance/$stack.docker-compose.yml"
