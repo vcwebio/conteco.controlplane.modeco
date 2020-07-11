@@ -10,7 +10,7 @@
 		volumeName=$(echo $volumeSettings | cut -d':' -f 1)
 		volumeDir=$(echo $volumeSettings | cut -d':' -f 2)
 		if [[ "$volumeName"  == "$volumePrefix"* ]] ; then
-			executionplane --silent docker run -v ${volumeSettings} -v controlplane_repos:/conteco/pwd ${CONTECO_REGISTRY}${imageName} --interactive tar cvf ${rootPath}/modeco/volumes/${volumeName}.tar ${volumeDir}
+			executionplane --silent docker run -v ${volumeSettings} -v ${CONTECO_PWD_VOLUME}:/conteco/pwd ${CONTECO_REGISTRY}${imageName} --interactive tar cvf ${rootPath}/modeco/volumes/${volumeName}.tar ${volumeDir}
 		fi
 	done;
 )
