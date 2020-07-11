@@ -3,6 +3,11 @@ rootPath=$1
 basePath="$rootPath/modeco"
 DOLLAR='$'
 
+export CONTECO_MODULEPREFIX="package"
+if [[ "$CONTECO_TYPE" != "package" ]] ; then
+	export CONTECO_MODULEPREFIX="${CONTECO_TYPE}_${CONTECO_NAME}"
+fi
+
 echo $'#!/usr/bin/env bash\n\n' > $basePath/deploy-local-down
 echo "prefix=\"${CONTECO_TYPE}_${DOLLAR}2\"
 " >> $basePath/deploy-local-down
@@ -16,12 +21,12 @@ IFS=$'\n' read -d '' -r -a volumes < $basePath/module-volumes
 for volume in ${volumes[@]};
 do
 	#	executionplane --silent docker volume rm --force ${volume}
-	echo "if [[ \"${volume}\" == \"${DOLLAR}prefix\"* ]] ; then
+	echo "if [[ \"${CONTECO_MODULEPREFIX}_${volume}\" == \"${DOLLAR}prefix\"* ]] ; then
 		continue=\"true\"
 		while [[ \"true\" == \"${DOLLAR}continue\" ]] ;
 		do
-			executionplane docker volume rm \"${volume}\"
-			result=${DOLLAR}(docker volume ls | grep \"${volume}\")
+			executionplane docker volume rm \"${CONTECO_MODULEPREFIX}_${volume}\"
+			result=${DOLLAR}(docker volume ls | grep \"${CONTECO_MODULEPREFIX}_${volume}\")
 			if [[ \"${DOLLAR}result\" == \"\" ]] ; then
 				continue=\"false\"
 			else
@@ -30,8 +35,8 @@ do
 		done;
 	fi
 	" >> $basePath/deploy-local-down
-	echo "if [[ \"${volume}\" == \"${DOLLAR}prefix\"* ]] ; then
-	executionplane --silent docker volume create ${volume}
+	echo "if [[ \"${CONTECO_MODULEPREFIX}_${volume}\" == \"${DOLLAR}prefix\"* ]] ; then
+	executionplane --silent docker volume create ${CONTECO_MODULEPREFIX}_${volume}
 	fi
 	" >> $basePath/deploy-local-up
 done;
@@ -42,13 +47,13 @@ do
 	volumeName=$(echo $volumeSettings | cut -d':' -f 1)
 	volumeDir=$(echo $volumeSettings | cut -d':' -f 2)
 	if [[ -d "$rootPath/modeco/volumes/${volumeName}" ]] ; then
-		echo "if [[ \"${volumeName}\" == \"${DOLLAR}prefix\"* ]] ; then
-			executionplane --silent docker run -v ${volumeName}:${volumeDir} ${DOLLAR}{CONTECO_REGISTRY}${DOLLAR}1 --interactive cp -r /modeco/volumes/${volumeName}/* ${volumeDir}
+		echo "if [[ \"${CONTECO_MODULEPREFIX}_${volumeName}\" == \"${DOLLAR}prefix\"* ]] ; then
+			executionplane --silent docker run -v ${CONTECO_MODULEPREFIX}_${volumeName}:${volumeDir} ${DOLLAR}{CONTECO_REGISTRY}${DOLLAR}1 --interactive cp -r /modeco/volumes/${volumeName}/* ${volumeDir}
 		fi
 		" >> $basePath/deploy-local-up
 	else
-		echo "if [[ \"${volumeName}\" == \"${DOLLAR}prefix\"* ]] ; then
-			executionplane --silent docker run -v ${volumeName}:${volumeDir} ${DOLLAR}{CONTECO_REGISTRY}${DOLLAR}1 --interactive tar -C / -xvf /modeco/volumes/${volumeName}.tar
+		echo "if [[ \"${CONTECO_MODULEPREFIX}_${volumeName}\" == \"${DOLLAR}prefix\"* ]] ; then
+			executionplane --silent docker run -v ${CONTECO_MODULEPREFIX}_${volumeName}:${volumeDir} ${DOLLAR}{CONTECO_REGISTRY}${DOLLAR}1 --interactive tar -C / -xvf /modeco/volumes/${volumeName}.tar
 		fi
 		" >> $basePath/deploy-local-up
 	fi

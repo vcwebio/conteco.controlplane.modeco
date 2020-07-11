@@ -3,10 +3,6 @@
 rootPath=$1
 basePath="$rootPath/modeco"
 
-#export CONTECO_NETWORKLOCAL=$(echo "${CONTECO_TYPE}" | tr - _)
-#export CONTECO_NETWORKGLOBAL="${CONTECO_ECOSYSTEM_RUNTIME}"
-
-
 # reset module settings files
 rm ${basePath}/module-stacks.module
 rm ${basePath}/module-volumes
@@ -29,7 +25,6 @@ do
 			export CONTECO_URLPREFIX="${CONTECO_TYPE}/$instanceName"
 
 			# extract and process package settings
-#			cat $settingsSource | envsubst '${CONTECO_STACKPREFIX} ${CONTECO_URLPREFIX} ${CONTECO_NETWORKLOCAL} ${CONTECO_NETWORKGLOBAL}' | sed "s/# END CONFIGURATION/export CONTECO_DC_GLOBAL_VOLUME_INITIALISED=\"\"\\n# END CONFIGURATION/g" > ${instanceFolder}/settings.package
 			cat $settingsSource | sed "s/# END CONFIGURATION/export CONTECO_DC_GLOBAL_VOLUME_INITIALISED=\"\"\\n# END CONFIGURATION/g" > ${instanceFolder}/settings.package
 			sed -i -e "s/CONTECO_DC_${packageName^^}_/${instanceName^^}_/g" ${instanceFolder}/settings.package
 			sed -i -e "s/conteco_dc_${packageName}/${instanceName}/g" ${instanceFolder}/settings.package
@@ -52,28 +47,29 @@ do
 					echo "start/stop,$packageName,$instanceName,$stack" >> ${basePath}/module-stacks.module
 				done;
 
-				# add volumes to module-volumes
-				IFS=',' read -r -a volumes <<< "${CONTECO_DC_GLOBAL_VOLUME_LIST}"
-				for volume in ${volumes[@]};
-				do
-					echo "$volume" >> ${basePath}/module-volumes
-				done;
+        ( # CONTECO_STACKPREFIX set to empty within
+					export CONTECO_STACKPREFIX=
+					stackName="$(basename $instanceFolder)"
+					. ${instanceFolder}/settings
+					# add volumes to module-volumes
+					IFS=',' read -r -a volumes <<< "${CONTECO_DC_GLOBAL_VOLUME_LIST}"
+					for volume in ${volumes[@]};
+					do
+						echo "$stackName$volume" >> ${basePath}/module-volumes
+					done;
 
-				# add initialised-volumes to module-volumes-initialised
-				# initialised volumes are taken from package instance configuration
-				. ${instanceFolder}/settings
-				IFS=',' read -r -a volumes <<< "${CONTECO_DC_GLOBAL_VOLUME_INITIALISED}"
-				for volumeSettings in ${volumes[@]};
-				do
-					echo "$volumeSettings" >> ${basePath}/module-volumes-initialised
-				done;
+					# add initialised-volumes to module-volumes-initialised
+					IFS=',' read -r -a volumes <<< "${CONTECO_DC_GLOBAL_VOLUME_INITIALISED}"
+					for volumeSettings in ${volumes[@]};
+					do
+						echo "$stackName$volumeSettings" >> ${basePath}/module-volumes-initialised
+					done;
+				)
 			)
-
 			rm $instanceFolder/*.docker-compose.yml ;
 			for f in $packageFolder/*.docker-compose.yml.conteco ;
 			do
 				destination="$(echo $f | sed "s/\/${packageName}\/conteco_dc_${packageName}/\/${packageName}\/${instanceName}\/${instanceName}/g" | sed "s/yml.conteco/yml/g" )"
-#				cat $f | envsubst '${CONTECO_TYPE} ${CONTECO_STACKPREFIX} ${CONTECO_URLPREFIX} ${CONTECO_NETWORKLOCAL} ${CONTECO_NETWORKGLOBAL}' > $destination
 				cat $f > $destination
 				sed -i -e "s/CONTECO_DC_${packageName^^}_/${instanceName^^}_/g" $destination
 				sed -i -e "s/conteco_dc_${packageName}/${instanceName}/g" $destination
