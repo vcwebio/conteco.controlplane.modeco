@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+imageName="$1"
+rootPath="$2"
+
+sourcePath="$rootPath/modeco/configs"
+destinationPath="$rootPath/modeco/volumes"
+
+. invoke-script $imageName modeco/configuration
+
+# apply module configuration to registered files
+# the files registered for configuration reside in the config folder, the output is to be place on the same path in the volumes folder
+
+IFS=',' read -r -a configFiles <<< "${MODECO_CONFIGURATION_FILES}"
+for configFile in ${configFiles[@]};
+do
+	cat $sourcePath/$configFile | envsubst "$MODECO_CONFIGURATION_KEYS" > $destinationPath/$configFile
+done;

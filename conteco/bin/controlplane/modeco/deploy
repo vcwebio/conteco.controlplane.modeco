@@ -13,23 +13,19 @@
 	if [[ "$1" != "$imageName" ]] ; then
 		stack="$1"
 	fi
-	if [[ "$CONTECO_TYPE" == "module" ]] ; then
-		executionplane-warning "The module ModEco type does not implement the deploy API."
-	else
-		case $method in
-			--info)
-				executionplane-error "No implementation for modeco deploy --info: $@"
-			;;
-			down|downup|up)
-				deploy-stack $method $imageName $stack
-			;;
-			local-down|local-downup|local-up)
-				deploy-stack-local $method  $imageName $stack
-			;;
-			*)
-				executionplane-error "invalid API method: $method"
-			;;
-		esac
-	fi
+	case $method in
+		--info)
+			executionplane-error "No implementation for modeco deploy --info: $@"
+		;;
+		down|downup|up)
+			deploy-stack $method $imageName $stack
+		;;
+		local-down|local-downup|local-up)
+			deploy-stack-local $method  $imageName $stack
+		;;
+		*)
+			executionplane-error "invalid API method: $method"
+		;;
+	esac
 	executionplane-complete
 )

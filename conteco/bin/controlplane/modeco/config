@@ -15,7 +15,11 @@
 				config package $@
 				config module $@
 				config deploy $@
+				config config $imageName $rootPath
 			fi
+		;;
+		config)
+			config-config $imageName $rootPath
 		;;
 		deploy)
 			config-deploy $rootPath
