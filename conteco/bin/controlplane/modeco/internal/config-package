@@ -36,7 +36,9 @@ do
 
 		# copy volumes if present
 #		executionplane --silent docker run -v ${CONTECO_PWD_VOLUME}:/conteco/pwd ${CONTECO_REGISTRY}$imageName --interactive cp -r /modeco/volumes/* ${basePath}/volumes/packages/
-		mkdir "${basePath}/volumes/packages"
+		if [[ ! -d ${basePath}/volumes/packages ]] ; then
+			mkdir "${basePath}/volumes/packages"
+		fi
 		docker run -v ${CONTECO_PWD_VOLUME}:/conteco/pwd ${CONTECO_REGISTRY}$imageName --interactive cp -r /modeco/volumes/* ${basePath}/volumes/packages/
 
 	fi

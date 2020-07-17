@@ -3,13 +3,8 @@ imageName="$1"
 action="$2"
 stackName="$3"
 
-export CONTECO_NETWORKLOCAL=$(echo "${CONTECO_TYPE}" | tr - _)
-export CONTECO_NETWORKGLOBAL="${CONTECO_ECOSYSTEM_RUNTIME}"
-
-# modules have module level configuration
-if [[ "$CONTECO_TYPE" != "package" ]] ; then
-	. invoke-script $imageName modeco/configuration
-fi
+# local and global network prefix
+. set-config
 
 if [[ "$stackName" == "task_"* ]] ; then
 	isTask="true"

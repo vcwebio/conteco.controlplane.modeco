@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# modules have module level configuration
+export CONTECO_NETWORKGLOBAL="${CONTECO_ECOSYSTEM_RUNTIME}"
+if [[ "$CONTECO_TYPE" == "package" ]] ; then
+	export CONTECO_NETWORKLOCAL="package"
+else
+	export CONTECO_NETWORKLOCAL="module_${CONTECO_TYPE}"
+	. invoke-script $imageName modeco/configuration
+fi
