@@ -2,6 +2,9 @@
 imageName="$1"
 rootPath="$2"
 
+# local and global network prefix
+. set-config $imageName
+
 sourcePath="$rootPath/modeco/configs"
 destinationPath="$rootPath/modeco/volumes"
 
