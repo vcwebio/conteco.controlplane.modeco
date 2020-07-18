@@ -4,19 +4,17 @@
 	rootPath="$2"
 	stack="$3"
 
-	export CONTECO_MODULEPREFIX="package"
-	if [[ "$CONTECO_TYPE" != "package" ]] ; then
-		export CONTECO_MODULEPREFIX="${CONTECO_TYPE}_${CONTECO_NAME}"
-	fi
+	# local and global network prefix
+	. set-config "$imageName"
 
-	volumePrefix="${CONTECO_MODULEPREFIX}_$stack"
+	volumePrefix="${MODECO_MODULEPREFIX}_$stack"
 	IFS=$'\n' read -d '' -r -a volumes < $rootPath/modeco/module-volumes-initialised
 	for volumeSettings in ${volumes[@]};
 	do
 		volumeName=$(echo $volumeSettings | cut -d':' -f 1)
 		volumeDir=$(echo $volumeSettings | cut -d':' -f 2)
-		if [[ "${CONTECO_MODULEPREFIX}_$volumeName"  == "$volumePrefix"* ]] ; then
-			executionplane --silent docker run -v ${CONTECO_MODULEPREFIX}_${volumeSettings} -v ${CONTECO_PWD_VOLUME}:/conteco/pwd ${CONTECO_REGISTRY}${imageName} --interactive tar cvf ${rootPath}/modeco/volumes/${volumeName}.tar ${volumeDir}
+		if [[ "${MODECO_MODULEPREFIX}_$volumeName"  == "$volumePrefix"* ]] ; then
+			executionplane --silent docker run -v ${MODECO_MODULEPREFIX}_${volumeSettings} -v ${CONTECO_PWD_VOLUME}:/conteco/pwd ${CONTECO_REGISTRY}${imageName} --interactive tar cvf ${rootPath}/modeco/volumes/${volumeName}.tar ${volumeDir}
 		fi
 	done;
 )

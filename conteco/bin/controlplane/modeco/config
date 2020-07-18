@@ -15,23 +15,23 @@
 				config package $@
 				config module $@
 				config deploy $@
-				config config $imageName $rootPath
+				config config $@
 			fi
 		;;
 		config)
 			config-config $imageName $rootPath
 		;;
 		deploy)
-			config-deploy $rootPath
+			config-deploy $imageName $rootPath
 		;;
 		exec)
 			config-exec $imageName $rootPath $@
 		;;
 		module)
-			config-module $rootPath
+			config-module $imageName $rootPath
 		;;
 		package)
-			config-package $rootPath
+			config-package $imageName $rootPath
 		;;
 		volume)
 			stack=""
