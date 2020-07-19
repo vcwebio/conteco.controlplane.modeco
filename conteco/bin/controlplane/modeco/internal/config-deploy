@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+imageName="$1"
+rootPath="$2"
+basePath="$rootPath/modeco"
+DOLLAR='$'
+
+# local and global network prefix
+. set-config $imageName
+
+echo $'#!/usr/bin/env bash\n\n' > $basePath/deploy-local-down
+echo "prefix=\"${MODECO_MODULEPREFIX}_${DOLLAR}2\"
+" >> $basePath/deploy-local-down
+cp $basePath/deploy-local-down $basePath/deploy-local-up
+
+echo "
+executionplane --silent docker container prune --force
+" >> $basePath/deploy-local-down
+
+IFS=$'\n' read -d '' -r -a volumes < $basePath/module-volumes
+for volume in ${volumes[@]};
+do
+	#	executionplane --silent docker volume rm --force ${volume}
+	echo "if [[ \"${MODECO_MODULEPREFIX}_${volume}\" == \"${DOLLAR}prefix\"* ]] ; then
+		continue=\"true\"
+		while [[ \"true\" == \"${DOLLAR}continue\" ]] ;
+		do
+			executionplane docker volume rm \"${MODECO_MODULEPREFIX}_${volume}\"
+			result=${DOLLAR}(docker volume ls | grep \"${MODECO_MODULEPREFIX}_${volume}\")
+			if [[ \"${DOLLAR}result\" == \"\" ]] ; then
+				continue=\"false\"
+			else
+				sleep 3;
+			fi
+		done;
+	fi
+	" >> $basePath/deploy-local-down
+	echo "if [[ \"${MODECO_MODULEPREFIX}_${volume}\" == \"${DOLLAR}prefix\"* ]] ; then
+	executionplane --silent docker volume create ${MODECO_MODULEPREFIX}_${volume}
+	fi
+	" >> $basePath/deploy-local-up
+done;
+
+IFS=$'\n' read -d '' -r -a volumes < $basePath/module-volumes-initialised
+for volumeSettings in ${volumes[@]};
+do
+	volumeName=$(echo $volumeSettings | cut -d':' -f 1)
+	volumeDir=$(echo $volumeSettings | cut -d':' -f 2)
+	if [[ -d $rootPath/modeco/volumes/${volumeName} ]] ; then
+		echo "if [[ \"${MODECO_MODULEPREFIX}_${volumeName}\" == \"${DOLLAR}prefix\"* ]] ; then
+			executionplane --silent docker run -v ${MODECO_MODULEPREFIX}_${volumeName}:${volumeDir} ${DOLLAR}{CONTECO_REGISTRY}${DOLLAR}1 --interactive cp -r /modeco/volumes/${volumeName}/* ${volumeDir}
+		fi
+		" >> $basePath/deploy-local-up
+	else
+		echo "if [[ \"${MODECO_MODULEPREFIX}_${volumeName}\" == \"${DOLLAR}prefix\"* ]] ; then
+			executionplane --silent docker run -v ${MODECO_MODULEPREFIX}_${volumeName}:${volumeDir} ${DOLLAR}{CONTECO_REGISTRY}${DOLLAR}1 --interactive tar -C / -xvf /modeco/volumes/${volumeName}.tar
+		fi
+		" >> $basePath/deploy-local-up
+	fi
+done;
+
+chmod -R 777 $basePath

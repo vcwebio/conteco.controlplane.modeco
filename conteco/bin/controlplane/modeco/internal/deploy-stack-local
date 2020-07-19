@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+method="$1"
+imageName="$2"
+stack="$3"
+
+# execute local deploy script
+if [[ "$method" == *"down"* ]] ; then
+  . invoke-script $imageName modeco/deploy-local-down "$imageName" "$stack"
+fi
+if [[ "$method" == *"up"* ]] ; then
+  . invoke-script $imageName modeco/deploy-local-up "$imageName" "$stack"
+fi

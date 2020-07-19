@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+(
+	imageName="$1"
+	rootPath="$2"
+	stack="$3"
+
+	# local and global network prefix
+	. set-config "$imageName"
+
+	volumePrefix="${MODECO_MODULEPREFIX}_$stack"
+	IFS=$'\n' read -d '' -r -a volumes < $rootPath/modeco/module-volumes-initialised
+	for volumeSettings in ${volumes[@]};
+	do
+		volumeName=$(echo $volumeSettings | cut -d':' -f 1)
+		volumeDir=$(echo $volumeSettings | cut -d':' -f 2)
+		if [[ "${MODECO_MODULEPREFIX}_$volumeName"  == "$volumePrefix"* ]] ; then
+			executionplane --silent docker run -v ${MODECO_MODULEPREFIX}_${volumeSettings} -v ${CONTECO_PWD_VOLUME}:/conteco/pwd ${CONTECO_REGISTRY}${imageName} --interactive tar cvf ${rootPath}/modeco/volumes/${volumeName}.tar ${volumeDir}
+		fi
+	done;
+)

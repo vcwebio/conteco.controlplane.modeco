@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+imageName="$1"
+rootPath="$2"
+basePath="$rootPath/modeco"
+
+# local and global network prefix
+. set-config $imageName
+
+for f in $basePath/packages/*
+do
+
+	packageName=$(basename $f)
+	destination="${basePath}/packages/$packageName"
+
+	packageConteco="$(grep CONTECO_DC_GLOBAL_PACKAGE_CONTECO= ${destination}/settings.conteco | cut -d'"' -f 2)"
+	if [[ "$CONTECO_TYPE" == "package" ]] ; then
+
+		if [[ ! -d $destination/${CONTECO_NAME} ]] ; then
+      mkdir $destination/${CONTECO_NAME}
+		fi
+		source="conteco/docker-compose"
+		imageName="${CONTECO_REALM_RUNTIME}/conteco.${packageConteco}"
+		imageTag="${CONTECO_TAG}"
+		tmpfile=$(mktemp /tmp/extract_resource.XXXXXX)
+		extract-resource $imageName ${source}/environment.module $tmpfile $imageTag
+		cat $tmpfile > ${destination}/settings.conteco
+		rm $tmpfile
+		oldStackName="$(grep CONTECO_DC_GLOBAL_STACKNAMES= ${destination}/settings.conteco | cut -d'"' -f 2 | cut -d',' -f 1)"
+		newStackName="conteco_dc_${packageName}"
+
+	else
+
+		source="modeco/packages/$packageName"
+		imageName="${CONTECO_REALM_RUNTIME}/modeco.package.$packageName"
+		imageTag="$(grep CONTECO_DC_GLOBAL_PACKAGE_TAG= ${destination}/settings.conteco | cut -d'"' -f 2)"
+		tmpfile=$(mktemp /tmp/extract_resource.XXXXXX)
+		extract-resource $imageName ${source}/settings.conteco $tmpfile $imageTag
+		cat $tmpfile > ${destination}/settings.conteco
+		rm $tmpfile
+
+		# copy volumes if present
+#		executionplane --silent docker run -v ${CONTECO_PWD_VOLUME}:/conteco/pwd ${CONTECO_REGISTRY}$imageName --interactive cp -r /modeco/volumes/* ${basePath}/volumes/packages/
+		if [[ ! -d ${basePath}/volumes/packages ]] ; then
+			mkdir "${basePath}/volumes/packages"
+		fi
+		docker run -v ${CONTECO_PWD_VOLUME}:/conteco/pwd ${CONTECO_REGISTRY}$imageName --interactive cp -r /modeco/volumes/* ${basePath}/volumes/packages/  &> /dev/null
+
+	fi
+
+	rm ${destination}/*.docker-compose.yml.conteco
+	imageStackNames="$(grep CONTECO_DC_GLOBAL_STACKNAMES= ${destination}/settings.conteco | cut -d'"' -f 2)"
+	IFS=',' read -r -a imageStacks <<< "${imageStackNames}"
+	for imageStack in ${imageStacks[@]};
+	do
+		if [[ "$CONTECO_TYPE" == "package" ]] ; then
+			tmpfile=$(mktemp /tmp/docker-compose.yml.XXXXXX)
+			extract-resource $imageName ${source}/stacks/${imageStack}.docker-compose.yml $tmpfile $imageTag
+			cat $tmpfile > ${destination}/${imageStack}.docker-compose.yml.conteco
+			rm $tmpfile
+		else
+			tmpfile=$(mktemp /tmp/docker-compose.yml.XXXXXX)
+			extract-resource $imageName ${source}/${imageStack}.docker-compose.yml.conteco $tmpfile $imageTag
+			cat $tmpfile > ${destination}/${imageStack}.docker-compose.yml.conteco
+			rm $tmpfile
+		fi
+	done;
+
+	if [[ "$newStackName" != "$oldStackName" ]] ; then
+		sed -i -e "s/${oldStackName^^}_/${newStackName^^}_/g" $destination/settings.conteco
+		sed -i -e "s/${oldStackName}/${newStackName}/g" $destination/settings.conteco
+		for imageStack in ${imageStacks[@]};
+		do
+			newImageStack=$(echo "$imageStack" | sed "s/${oldStackName}/${newStackName}/g")
+			if [[ "conteco_dc_$packageName" != "$oldStackName" ]] ; then
+				sed -i -e "s/${oldStackName^^}_/${newStackName^^}_/g" ${destination}/${imageStack}.docker-compose.yml.conteco
+				sed -i -e "s/${oldStackName}_/${newStackName}_/g" ${destination}/${imageStack}.docker-compose.yml.conteco
+			fi
+			mv ${destination}/${imageStack}.docker-compose.yml.conteco ${destination}/${newImageStack}.docker-compose.yml.conteco
+		done;
+	fi
+
+done;
+
+chmod -R 777 $basePath

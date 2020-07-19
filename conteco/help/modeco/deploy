@@ -1,0 +1,13 @@
+#
+# deploy [arguments] <selector>
+# Use the --info flag to get config specific container image information.
+#
+# This interface manages the deployment of the service stacks (all types) and the repository (module type only).
+#
+# deploy [up/downup/down]
+# This method deploys, redeploys or removes the module network and volumes.
+#
+# deploy [local-up/local-downup/local-down]
+# This method deploys, redeploys or removes the module network and volumes.
+# It calls the equivalent local- method as a global service to manage the volumes on each node.
+#

@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+(
+	export PATH="$CONTECO_EXECUTIONPLANE_APIINTERNALPATH_MODECO"
+	. executionplane-invoke "$0 $@"
+	imageName="${@: -1}"
+	rootPath="/conteco/pwd/${imageName}"
+	. invoke-script $imageName environment
+
+	command=$1
+	shift
+	case $command in
+		all)
+			config build $@
+			if [[  " backup " != *"$CONTECO_TYPE"* ]] ; then
+				config package $@
+				config module $@
+				config deploy $@
+				config config $@
+			fi
+		;;
+		config)
+			config-config $imageName $rootPath
+		;;
+		deploy)
+			config-deploy $imageName $rootPath
+		;;
+		exec)
+			config-exec $imageName $rootPath $@
+		;;
+		module)
+			config-module $imageName $rootPath
+		;;
+		package)
+			config-package $imageName $rootPath
+		;;
+		volume)
+			stack=""
+			if [[ $# -gt 1 ]] ; then
+				stack=$1
+			fi
+			config-volume $imageName $rootPath $stack
+		;;
+		*)
+			.base config $command $@
+    ;;
+	esac
+  executionplane-complete
+)

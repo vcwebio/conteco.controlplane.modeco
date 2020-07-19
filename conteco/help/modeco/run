@@ -1,0 +1,37 @@
+#
+# run [method] [stack] <selector>
+# Use the --info flag to get config specific container image information.
+#
+# The run API manages the full run lifecycle of the module service stacks.
+# It implements eight methods: boot / reboot / shutdown, start / restart / stop and pause / resume.
+#
+# run boot [bootstack - optional]
+# Starts the service stacks registered as boot stacks.
+# Boot service stacks need to be up and running before the module can be started.
+#
+# run pause
+# Pauses a service stack. This can be any service stack of the module.
+#
+# run reboot [bootstack - optional]
+# Restarts the service stacks registered as boot stacks.
+# Boot service stacks need to be up and running before the module can be started.
+#
+# run restart [runstack - optional]
+# Restarts the service stacks registered as run stacks.
+# Run stacks implement the dynamic functionality of the module.
+#
+# run resume
+# Resumes a service stack. This can be any service stack of the module.
+#
+# run shutdown [bootstack]
+# Shuts down the service stacks registered as boot stacks.
+# Boot service stacks need to be up and running before the module can be started.
+#
+# run start [runstack - optional]
+# Starts the service stacks registered as run stacks.
+# Run stacks implement the dynamic functionality of the module.
+#
+# run stop [runstack]
+# Stops the service stacks registered as run stacks.
+# Run stacks implement the dynamic functionality of the module.  
+#
