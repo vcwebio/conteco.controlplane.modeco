@@ -2,6 +2,7 @@
 imageName="$1"
 
 # modules have module level configuration
+DOLLAR='$'
 if [[ "$CONTECO_TYPE" == "package" ]] ; then
 	export CONTECO_NETWORKGLOBAL="${CONTECO_ECOSYSTEM_RUNTIME}"
 	export CONTECO_NETWORKLOCAL="package"
@@ -9,6 +10,7 @@ if [[ "$CONTECO_TYPE" == "package" ]] ; then
 	export MODECO_URLPREFIX="${CONTECO_TYPE}"
 else
 	. invoke-script $imageName modeco/configuration
+	export MODECO_HOSTNAME="${DOLLAR}{CONTECO_HOSTNAME}"
 	export CONTECO_NETWORKGLOBAL="${CONTECO_ECOSYSTEM_RUNTIME}"
 	export CONTECO_NETWORKLOCAL="module_${CONTECO_TYPE}"
 	export MODECO_MODULEPREFIX="module_${CONTECO_TYPE}_${CONTECO_NAME}"

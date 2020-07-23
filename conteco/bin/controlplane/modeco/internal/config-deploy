@@ -2,7 +2,6 @@
 imageName="$1"
 rootPath="$2"
 basePath="$rootPath/modeco"
-DOLLAR='$'
 
 # local and global network prefix
 . set-config $imageName

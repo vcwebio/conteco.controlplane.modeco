@@ -1,20 +1,34 @@
 #!/usr/bin/env bash
+shopt -s nullglob
 imageName="$1"
 rootPath="$2"
+basePath="$rootPath/modeco"
 
 # local and global network prefix
 . set-config $imageName
 
-sourcePath="$rootPath/modeco/configs"
-destinationPath="$rootPath/modeco/volumes"
-
-. invoke-script $imageName modeco/configuration
-
-# apply module configuration to registered files
-# the files registered for configuration reside in the config folder, the output is to be place on the same path in the volumes folder
-
-IFS=',' read -r -a configFiles <<< "${MODECO_CONFIGURATION_FILES}"
-for configFile in ${configFiles[@]};
+IFS=$'\n' read -d '' -r -a volumes < $basePath/module-volumes-initialised
+for volumeSettings in ${volumes[@]};
 do
-	cat $sourcePath/$configFile | envsubst "$MODECO_CONFIGURATION_KEYS" > $destinationPath/$configFile
+	volumeName=$(echo $volumeSettings | cut -d':' -f 1)
+	for f in $basePath/configs/$volumeName/*
+	do
+		level1="$(basename $f)"
+		if [[ -f $f ]] ; then cat $f | envsubst > $basePath/volumes/$volumeName/$level1;
+	  else
+			for g in $f/*
+			do
+				level2="$(basename $g)"
+				if [[ -f $g ]] ; then cat $g | envsubst > $basePath/volumes/$volumeName/$level1/$level2;
+			  else
+					for h in $g/*
+					do
+						level3="$(basename $h)"
+						if [[ -f $h ]] ; then cat $h | envsubst > $basePath/volumes/$volumeName/$level1/$level2/$level3;
+						else executionplane-error "$h: Environment variable substitution only up to 2 folder levels deep!"; fi
+				  done;
+				fi
+		  done;
+		fi
+	done;
 done;
