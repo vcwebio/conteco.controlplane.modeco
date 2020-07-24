@@ -4,29 +4,28 @@
 	. executionplane-invoke "$0 $@"
 	imageName="${@: -1}"
 	. invoke-script $imageName environment
-	if [[ $# -gt 2 ]] ; then
-		stack="$2"
-	fi
-	case $1 in
+	method="$1"; shift;
+	if [[ "$1" != "$imageName" ]] ; then stack="$1"; shift; else stack="."; fi
+	case $method in
 		boot|shutdown|start|stop)
-			run-stack $imageName $1 $stack
+			run-stack $imageName $method $stack ${@:1:$#-1}
 		;;
 		pause)
 			executionplane-error "Method not implemented: $1."
 		;;
 		reboot)
-			run shutdown ${@:2:$#-1}
-			run boot ${@:2:$#-1}
+			run shutdown $stack $@
+			run boot $stack $@
 		;;
 		restart)
-			run stop ${@:2:$#-1}
-			run start ${@:2:$#-1}
+			run stop $stack $@
+			run start $stack $@
 		;;
 		resume)
 			executionplane-error "Method not implemented: $1."
 		;;
 		*)
-			.base run $@
+			.base run $method $stask $@
 		;;
 	esac
   executionplane-complete

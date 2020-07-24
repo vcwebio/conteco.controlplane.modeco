@@ -30,7 +30,7 @@ do
 			fi
 
 			(
-				. ${instanceFolder}/settings.package
+				. ${instanceFolder}/settings
 				# add boot stacks to module-stacks
 				IFS=',' read -r -a stacks <<< "${CONTECO_DC_GLOBAL_BOOTSTACKS}"
 				for stack in ${stacks[@]};

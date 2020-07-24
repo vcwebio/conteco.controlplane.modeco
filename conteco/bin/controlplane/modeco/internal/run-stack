@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
-imageName="$1"
-action="$2"
-stackName="$3"
+imageName="$1"; shift;
+action="$1"; shift;
+stackName="$1"; shift;
 
+echo "run-stack: $imageName $action $stackName $@"
+
+if [[ "$stackName" == "." ]] ; then stackName=""; fi
 # local and global network prefix
 . set-config $imageName
 
@@ -42,6 +45,11 @@ cat $tmpfilef | grep "$action" | grep "$stackSelector" | while read -r line ; do
 				composeFile="modeco/packages/$package/$instance/$stack.docker-compose.yml"
 				. invoke-script $imageName "modeco/packages/$package/$instance/settings.package"
 				. invoke-script $imageName "modeco/packages/$package/$instance/settings"
+				if [[ "$action" == "start" ]] ; then
+					interactive="${stack^^}_COMMAND_INTERACTIVE"
+					command="${stack^^}_COMMAND"
+					if [[ "${!interactive}" == "true" ]]; then export ${stack^^}_COMMAND="'.invoke $* '"; fi
+				fi
 				extract-resource $imageName $composeFile $tmpfilep
 				cat $tmpfilep | envsubst > $tmpfile
 				cat $tmpfile
