@@ -15,12 +15,10 @@ do
 	packageConteco="$(grep CONTECO_DC_GLOBAL_PACKAGE_CONTECO= ${destination}/settings.conteco | cut -d'"' -f 2)"
 	if [[ "$CONTECO_TYPE" == "package" ]] ; then
 
-		if [[ ! -d $destination/${CONTECO_NAME} ]] ; then
-      mkdir $destination/${CONTECO_NAME}
-		fi
+		if [[ ! -d $destination/${CONTECO_NAME} ]] ; then mkdir $destination/${CONTECO_NAME}; fi
 		source="conteco/docker-compose"
 		imageName="${CONTECO_REALM_RUNTIME}/conteco.${packageConteco}"
-		imageTag="${CONTECO_TAG}"
+		if [[ "$MODECO_PACKAGE_UPDATE" != "latest" ]] ; then imageTag="${CONTECO_TAG}"; fi
 		tmpfile=$(mktemp /tmp/extract_resource.XXXXXX)
 		extract-resource $imageName ${source}/environment.module $tmpfile $imageTag
 		cat $tmpfile > ${destination}/settings.conteco
