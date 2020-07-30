@@ -19,10 +19,7 @@ do
 		source="conteco/docker-compose"
 		imageName="${CONTECO_REALM_RUNTIME}/conteco.${packageConteco}"
 		if [[ "$MODECO_PACKAGE_UPDATE" != "latest" ]] ; then imageTag="${CONTECO_TAG}"; fi
-		tmpfile=$(mktemp /tmp/extract_resource.XXXXXX)
-		extract-resource $imageName ${source}/environment.module $tmpfile $imageTag
-		cat $tmpfile > ${destination}/settings.conteco
-		rm $tmpfile
+		extract-resource $imageName ${source}/environment.module ${destination}/settings.conteco $imageTag
 		oldStackName="$(grep CONTECO_DC_GLOBAL_STACKNAMES= ${destination}/settings.conteco | cut -d'"' -f 2 | cut -d',' -f 1)"
 		newStackName="conteco_dc_${packageName}"
 
@@ -31,16 +28,13 @@ do
 		source="modeco/packages/$packageName"
 		imageName="${CONTECO_REALM_RUNTIME}/modeco.package.$packageName"
 		imageTag="$(grep CONTECO_DC_GLOBAL_PACKAGE_TAG= ${destination}/settings.conteco | cut -d'"' -f 2)"
-		tmpfile=$(mktemp /tmp/extract_resource.XXXXXX)
-		extract-resource $imageName ${source}/settings.conteco $tmpfile $imageTag
-		cat $tmpfile > ${destination}/settings.conteco
-		rm $tmpfile
+		extract-resource $imageName ${source}/settings.conteco ${destination}/settings.conteco $imageTag
+		extract-resource $imageName modeco/configuration ${destination}/configuration $imageTag
+		extract-resource $imageName $source/$packageName/settings ${destination}/settings $imageTag
 
 		# copy volumes if present
 #		executionplane --silent docker run -v ${CONTECO_PWD_VOLUME}:/conteco/pwd ${CONTECO_REGISTRY}$imageName --interactive cp -r /modeco/volumes/* ${basePath}/volumes/packages/
-		if [[ ! -d ${basePath}/volumes/packages ]] ; then
-			mkdir "${basePath}/volumes/packages"
-		fi
+		if [[ ! -d ${basePath}/volumes/packages ]] ; then mkdir "${basePath}/volumes/packages"; fi
 		docker run -v ${CONTECO_PWD_VOLUME}:/conteco/pwd ${CONTECO_REGISTRY}$imageName --interactive cp -r /modeco/volumes/* ${basePath}/volumes/packages/  &> /dev/null
 
 	fi
@@ -50,17 +44,8 @@ do
 	IFS=',' read -r -a imageStacks <<< "${imageStackNames}"
 	for imageStack in ${imageStacks[@]};
 	do
-		if [[ "$CONTECO_TYPE" == "package" ]] ; then
-			tmpfile=$(mktemp /tmp/docker-compose.yml.XXXXXX)
-			extract-resource $imageName ${source}/stacks/${imageStack}.docker-compose.yml $tmpfile $imageTag
-			cat $tmpfile > ${destination}/${imageStack}.docker-compose.yml.conteco
-			rm $tmpfile
-		else
-			tmpfile=$(mktemp /tmp/docker-compose.yml.XXXXXX)
-			extract-resource $imageName ${source}/${imageStack}.docker-compose.yml.conteco $tmpfile $imageTag
-			cat $tmpfile > ${destination}/${imageStack}.docker-compose.yml.conteco
-			rm $tmpfile
-		fi
+		if [[ "$CONTECO_TYPE" == "package" ]] ; then extract-resource $imageName ${source}/stacks/${imageStack}.docker-compose.yml ${destination}/${imageStack}.docker-compose.yml.conteco $imageTag;
+		else extract-resource $imageName ${source}/${imageStack}.docker-compose.yml.conteco ${destination}/${imageStack}.docker-compose.yml.conteco $imageTag; fi
 	done;
 
 	if [[ "$newStackName" != "$oldStackName" ]] ; then
