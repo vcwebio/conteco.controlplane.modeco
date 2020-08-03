@@ -3,7 +3,7 @@ imageName="$1"
 
 # modules have module level configuration
 DOLLAR='$'
-. invoke-script $imageName modeco/configuration
+
 if [[ "$CONTECO_TYPE" == "package" ]] ; then
 	export CONTECO_NETWORKGLOBAL="${CONTECO_ECOSYSTEM_RUNTIME}"
 	export CONTECO_NETWORKLOCAL="package"
@@ -20,3 +20,5 @@ if [[ "${CONTECO_ECOSYSTEM_RUNTIME}" != "${CONTECO_NAME_CONTROLPLANE}" ]] ; then
 	prefix="${CONTECO_ECOSYSTEM_RUNTIME:${#CONTECO_NAME_CONTROLPLANE}+1}_"
 fi
 export MODECO_STACKSCOPE="${prefix}${CONTECO_TYPE}_${CONTECO_NAME}${urlSuffix}"
+
+. invoke-script $imageName modeco/configuration
